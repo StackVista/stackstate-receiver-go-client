@@ -1,7 +1,7 @@
 package transactionmanager
 
 import (
-	"github.com/StackVista/stackstate-receiver-go-client/pkg/model"
+	"github.com/StackVista/stackstate-receiver-go-client/pkg/model/check"
 	"sync"
 )
 
@@ -49,7 +49,7 @@ func (ttm *MockTransactionManager) Stop() {
 }
 
 // StartTransaction sets the current transaction value and updates the notify channel
-func (ttm *MockTransactionManager) StartTransaction(_ model.CheckID, TransactionID string, NotifyChannel chan interface{}) {
+func (ttm *MockTransactionManager) StartTransaction(_ check.CheckID, TransactionID string, NotifyChannel chan interface{}) {
 	ttm.mux.Lock()
 	ttm.currentTransaction = TransactionID
 	ttm.currentTransactionNotifyChannel = NotifyChannel

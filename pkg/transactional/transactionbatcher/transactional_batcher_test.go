@@ -2,8 +2,9 @@ package transactionbatcher
 
 import (
 	"encoding/json"
-	"github.com/StackVista/stackstate-receiver-go-client/pkg/model"
+	"github.com/StackVista/stackstate-receiver-go-client/pkg/model/check"
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/model/health"
+	"github.com/StackVista/stackstate-receiver-go-client/pkg/model/telemetry"
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/model/topology"
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/transactional"
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/transactional/transactionforwarder"
@@ -19,8 +20,8 @@ var (
 	testInstance2      = topology.Instance{Type: "mytype2", URL: "myurl2"}
 	testHost           = "myhost"
 	testAgent          = "myagent"
-	testID             = model.CheckID("myid")
-	testID2            = model.CheckID("myid2")
+	testID             = check.CheckID("myid")
+	testID2            = check.CheckID("myid2")
 	testTransactionID  = "transaction1"
 	testTransaction2ID = "transaction2"
 	testComponent      = topology.Component{
@@ -49,7 +50,7 @@ var (
 	testStopSnapshot  = &health.StopSnapshotMetadata{}
 	testCheckData     = health.CheckData{Unstructured: map[string]interface{}{}}
 
-	testRawMetricsData = model.RawMetrics{
+	testRawMetricsData = telemetry.RawMetric{
 		Name:      "name",
 		Timestamp: 1400000,
 		HostName:  "Hostname",
@@ -59,7 +60,7 @@ var (
 			"bar",
 		},
 	}
-	testRawMetricsData2 = model.RawMetrics{
+	testRawMetricsData2 = telemetry.RawMetric{
 		Name:      "name",
 		Timestamp: 1500000,
 		HostName:  "Hostname",
@@ -73,43 +74,43 @@ var (
 	testRawMetricsDataIntakeMetric  = testRawMetricsData.IntakeMetricJSON()
 	testRawMetricsDataIntakeMetric2 = testRawMetricsData2.IntakeMetricJSON()
 
-	testEvent = model.Event{
+	testEvent = telemetry.Event{
 		Title:          "test-event-1",
 		Ts:             time.Now().Unix(),
 		EventType:      "docker",
 		Tags:           []string{"my", "test", "tags"},
 		AggregationKey: "docker:redis",
 		SourceTypeName: "docker",
-		Priority:       model.EventPriorityNormal,
+		Priority:       telemetry.EventPriorityNormal,
 	}
-	testEvent2 = model.Event{
+	testEvent2 = telemetry.Event{
 		Title:          "test-event-2",
 		Ts:             time.Now().Unix(),
 		EventType:      "docker",
 		Tags:           []string{"my", "test", "tags"},
 		AggregationKey: "docker:mysql",
 		SourceTypeName: "docker",
-		Priority:       model.EventPriorityNormal,
-		EventContext: &model.EventContext{
+		Priority:       telemetry.EventPriorityNormal,
+		EventContext: &telemetry.EventContext{
 			Data:     map[string]interface{}{},
 			Source:   "docker",
 			Category: "containers",
 		},
 	}
-	testEvent3 = model.Event{
+	testEvent3 = telemetry.Event{
 		Title:          "test-event-3",
 		Ts:             time.Now().Unix(),
 		EventType:      "docker",
 		Tags:           []string{"my", "test", "tags"},
 		AggregationKey: "docker:mysql",
 		SourceTypeName: "docker-other",
-		Priority:       model.EventPriorityNormal,
-		EventContext: &model.EventContext{
+		Priority:       telemetry.EventPriorityNormal,
+		EventContext: &telemetry.EventContext{
 			Data:               map[string]interface{}{},
 			Source:             "docker",
 			Category:           "containers",
 			ElementIdentifiers: []string{"element-identifier"},
-			SourceLinks:        []model.SourceLink{{Title: "source-link", URL: "source-url"}},
+			SourceLinks:        []telemetry.SourceLink{{Title: "source-link", URL: "source-url"}},
 		},
 	}
 )
@@ -289,7 +290,7 @@ func TestBatchFlushOnComplete(t *testing.T) {
 		},
 	}
 	expectedPayload.Metrics = []interface{}{testRawMetricsDataIntakeMetric, testRawMetricsDataIntakeMetric2}
-	expectedPayload.Events = map[string][]model.Event{
+	expectedPayload.Events = map[string][]telemetry.Event{
 		"docker": {testEvent},
 	}
 
@@ -418,7 +419,7 @@ func TestBatchMultipleTopologiesAndHealthStreams(t *testing.T) {
 		testRawMetricsDataIntakeMetric2,
 	}
 
-	expectedPayload.Events = map[string][]model.Event{
+	expectedPayload.Events = map[string][]telemetry.Event{
 		"docker":       {testEvent, testEvent2},
 		"docker-other": {testEvent3},
 	}
@@ -514,7 +515,7 @@ func TestBatchFlushOnMaxEvents(t *testing.T) {
 
 	expectedPayload := transactional.NewIntakePayload()
 	expectedPayload.InternalHostname = "myhost"
-	expectedPayload.Events = map[string][]model.Event{
+	expectedPayload.Events = map[string][]telemetry.Event{
 		"docker": {testEvent, testEvent2},
 	}
 
@@ -700,7 +701,7 @@ func TestBatchClearState(t *testing.T) {
 			DeleteIDs:     []string{testDeleteID1},
 		},
 	}
-	expectedPayload.Events = map[string][]model.Event{
+	expectedPayload.Events = map[string][]telemetry.Event{
 		"docker": {testEvent},
 	}
 

@@ -3,7 +3,7 @@ package transactionbatcher
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/StackVista/stackstate-receiver-go-client/pkg/model"
+	"github.com/StackVista/stackstate-receiver-go-client/pkg/model/telemetry"
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/transactional"
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/transactional/transactionforwarder"
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/transactional/transactionmanager"
@@ -194,7 +194,7 @@ func (ctb *transactionalBatcher) mapStateToPayload(states TransactionCheckInstan
 	intake.InternalHostname = ctb.Hostname
 
 	// Create the topologies payload
-	allEvents := &model.IntakeEvents{}
+	allEvents := &telemetry.IntakeEvents{}
 	for _, state := range states {
 		if state.Topology != nil {
 			intake.Topologies = append(intake.Topologies, *state.Topology)

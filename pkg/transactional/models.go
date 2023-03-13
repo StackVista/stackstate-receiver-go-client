@@ -3,8 +3,8 @@ package transactional
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/StackVista/stackstate-receiver-go-client/pkg/model"
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/model/health"
+	"github.com/StackVista/stackstate-receiver-go-client/pkg/model/telemetry"
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/model/topology"
 	"reflect"
 )
@@ -23,11 +23,11 @@ type PayloadTransaction struct {
 
 // IntakePayload is a Go representation of the Receiver Intake structure
 type IntakePayload struct {
-	InternalHostname string                   `json:"internalHostname"`
-	Topologies       []topology.Topology      `json:"topologies"`
-	Health           []health.Health          `json:"health"`
-	Metrics          []interface{}            `json:"metrics"`
-	Events           map[string][]model.Event `json:"events"`
+	InternalHostname string                       `json:"internalHostname"`
+	Topologies       []topology.Topology          `json:"topologies"`
+	Health           []health.Health              `json:"health"`
+	Metrics          []interface{}                `json:"metrics"`
+	Events           map[string][]telemetry.Event `json:"events"`
 }
 
 // JSONString returns a JSON string of the Component
@@ -55,6 +55,6 @@ func NewIntakePayload() IntakePayload {
 		Topologies: make([]topology.Topology, 0),
 		Health:     make([]health.Health, 0),
 		Metrics:    make([]interface{}, 0),
-		Events:     make(map[string][]model.Event, 0),
+		Events:     make(map[string][]telemetry.Event, 0),
 	}
 }

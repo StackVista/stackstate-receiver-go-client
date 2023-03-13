@@ -2,7 +2,7 @@ package transactionmanager
 
 import (
 	"fmt"
-	"github.com/StackVista/stackstate-receiver-go-client/pkg/model"
+	"github.com/StackVista/stackstate-receiver-go-client/pkg/model/check"
 	log "github.com/cihub/seelog"
 	"sync"
 	"time"
@@ -160,7 +160,7 @@ transactionHandler:
 }
 
 // startTransaction creates a transaction and puts it into the transactions map
-func (txm *transactionManager) startTransaction(transactionID string, checkID model.CheckID, notify chan interface{}) (*IntakeTransaction, error) {
+func (txm *transactionManager) startTransaction(transactionID string, checkID check.CheckID, notify chan interface{}) (*IntakeTransaction, error) {
 	transaction := &IntakeTransaction{
 		TransactionID:        transactionID,
 		CheckID:              checkID,

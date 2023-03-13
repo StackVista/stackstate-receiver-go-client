@@ -2,7 +2,7 @@ package transactionmanager
 
 import (
 	"fmt"
-	"github.com/StackVista/stackstate-receiver-go-client/pkg/model"
+	"github.com/StackVista/stackstate-receiver-go-client/pkg/model/check"
 	"time"
 )
 
@@ -69,7 +69,7 @@ type Action struct {
 // IntakeTransaction represents an intake checkmanager which consists of one or more actions
 type IntakeTransaction struct {
 	TransactionID        string
-	CheckID              model.CheckID
+	CheckID              check.CheckID
 	Status               TransactionStatus
 	Actions              map[string]*Action // pointer to allow in-place mutation instead of setting the value again
 	NotifyChannel        chan interface{}
@@ -104,7 +104,7 @@ type RejectAction struct {
 
 // StartTransaction starts a transaction for a given checkID, with an optional OnComplete callback function.
 type StartTransaction struct {
-	CheckID       model.CheckID
+	CheckID       check.CheckID
 	TransactionID string
 	NotifyChannel chan interface{}
 }

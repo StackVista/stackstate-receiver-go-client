@@ -1,7 +1,7 @@
 package transactionmanager
 
 import (
-	"github.com/StackVista/stackstate-receiver-go-client/pkg/model"
+	"github.com/StackVista/stackstate-receiver-go-client/pkg/model/check"
 	log "github.com/cihub/seelog"
 	"sync"
 )
@@ -52,7 +52,7 @@ func (txm *transactionManager) TransactionCount() int {
 }
 
 // StartTransaction begins a transaction for a given check
-func (txm *transactionManager) StartTransaction(checkID model.CheckID, transactionID string, notifyChannel chan interface{}) {
+func (txm *transactionManager) StartTransaction(checkID check.CheckID, transactionID string, notifyChannel chan interface{}) {
 	txm.transactionChannel <- StartTransaction{
 		CheckID:       checkID,
 		TransactionID: transactionID,
