@@ -1,7 +1,7 @@
 package transactionforwarder
 
 import (
-	"github.com/StackVista/stackstate-agent/pkg/config"
+	"github.com/StackVista/stackstate-receiver-go-client/pkg/httpclient"
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/transactional"
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/transactional/transactionmanager"
 	"github.com/stretchr/testify/assert"
@@ -192,12 +192,14 @@ func TestForwarder(t *testing.T) {
 
 			server := httpServer(tc.Attempts)
 
-			config.Datadog.Set("sts_url", server.URL)
-			config.Datadog.Set("api_key", "my-test-api-key")
-			config.Datadog.Set("transactional_forwarder_retry_min", 100*time.Millisecond)
-			config.Datadog.Set("transactional_forwarder_retry_max", 500*time.Millisecond)
+			client := &httpclient.ClientHost{
+				APIKey:            "my-test-api-key",
+				HostURL:           server.URL,
+				ForwarderRetryMin: 100 * time.Millisecond,
+				ForwarderRetryMax: 500 * time.Millisecond,
+			}
 
-			fwd := newTransactionalForwarder()
+			fwd := newTransactionalForwarder(client)
 
 			fwd.SubmitTransactionalIntake(tc.TestTransactionalPayload)
 
@@ -231,12 +233,14 @@ func TestForwarder_Multiple(t *testing.T) {
 
 	server := httpServer()
 
-	config.Datadog.Set("sts_url", server.URL)
-	config.Datadog.Set("api_key", "my-test-api-key")
-	config.Datadog.Set("transactional_forwarder_retry_min", 100*time.Millisecond)
-	config.Datadog.Set("transactional_forwarder_retry_max", 500*time.Millisecond)
+	client := &httpclient.ClientHost{
+		APIKey:            "my-test-api-key",
+		HostURL:           server.URL,
+		ForwarderRetryMin: 100 * time.Millisecond,
+		ForwarderRetryMax: 500 * time.Millisecond,
+	}
 
-	fwd := newTransactionalForwarder()
+	fwd := newTransactionalForwarder(client)
 
 	for i := 0; i < 5; i++ {
 		txMap := map[string]transactional.PayloadTransaction{

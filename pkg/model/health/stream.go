@@ -1,4 +1,4 @@
-package model
+package health
 
 import "fmt"
 import "encoding/json"

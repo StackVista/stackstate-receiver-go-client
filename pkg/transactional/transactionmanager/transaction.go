@@ -2,6 +2,7 @@ package transactionmanager
 
 import (
 	"fmt"
+	"github.com/StackVista/stackstate-receiver-go-client/pkg/model"
 	"time"
 )
 

@@ -1,4 +1,4 @@
-package model
+package topology
 
 // Type of topology element (component or relation)
 type Type struct {

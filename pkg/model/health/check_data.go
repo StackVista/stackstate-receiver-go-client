@@ -1,9 +1,9 @@
-package model
+package health
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/StackVista/stackstate-agent/pkg/util/log"
+	log "github.com/cihub/seelog"
 )
 
 // CheckData describes state of a health stream

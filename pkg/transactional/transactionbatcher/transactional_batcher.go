@@ -3,11 +3,11 @@ package transactionbatcher
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/StackVista/stackstate-agent/pkg/config"
-	"github.com/StackVista/stackstate-agent/pkg/util/log"
+	"github.com/StackVista/stackstate-receiver-go-client/pkg/model"
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/transactional"
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/transactional/transactionforwarder"
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/transactional/transactionmanager"
+	log "github.com/cihub/seelog"
 	"github.com/google/uuid"
 	"sync"
 )
@@ -22,9 +22,9 @@ func init() {
 }
 
 // InitTransactionalBatcher initializes the global transactional transactionbatcher Instance
-func InitTransactionalBatcher(hostname, agentName string, maxCapacity int) {
+func InitTransactionalBatcher(hostname, agentName string, maxCapacity int, logPayloads bool) {
 	batcherInit.Do(func() {
-		batcherInstance = newTransactionalBatcher(hostname, agentName, maxCapacity)
+		batcherInstance = newTransactionalBatcher(hostname, agentName, maxCapacity, logPayloads)
 	})
 }
 
@@ -42,13 +42,14 @@ func NewMockTransactionalBatcher() *MockTransactionalBatcher {
 }
 
 // newTransactionalBatcher returns an instance of the transactionalBatcher and starts listening for submissions
-func newTransactionalBatcher(hostname, agentName string, maxCapacity int) *transactionalBatcher {
+func newTransactionalBatcher(hostname, agentName string, maxCapacity int, logPayloads bool) *transactionalBatcher {
 	ctb := &transactionalBatcher{
 		Hostname:    hostname,
 		agentName:   agentName,
 		Input:       make(chan interface{}, maxCapacity),
 		builder:     NewTransactionalBatchBuilder(maxCapacity),
 		maxCapacity: maxCapacity,
+		logPayloads: logPayloads,
 	}
 
 	go ctb.Start()
@@ -62,6 +63,7 @@ type transactionalBatcher struct {
 	Input               chan interface{}
 	builder             TransactionBatchBuilder
 	maxCapacity         int
+	logPayloads         bool
 }
 
 // Start starts the transactional transactionbatcher
@@ -192,7 +194,7 @@ func (ctb *transactionalBatcher) mapStateToPayload(states TransactionCheckInstan
 	intake.InternalHostname = ctb.Hostname
 
 	// Create the topologies payload
-	allEvents := &metrics.IntakeEvents{}
+	allEvents := &model.IntakeEvents{}
 	for _, state := range states {
 		if state.Topology != nil {
 			intake.Topologies = append(intake.Topologies, *state.Topology)
@@ -216,7 +218,7 @@ func (ctb *transactionalBatcher) mapStateToPayload(states TransactionCheckInstan
 	intake.Events = allEvents.IntakeFormat()
 
 	// For debug purposes print out all topologies payload
-	if config.Datadog.GetBool("log_payloads") {
+	if ctb.logPayloads {
 		log.Debug("Flushing the following topologies:")
 		for _, topo := range intake.Topologies {
 			log.Debugf("%v", topo)

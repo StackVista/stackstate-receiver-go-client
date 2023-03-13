@@ -2,6 +2,8 @@ package transactionbatcher
 
 import (
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/model"
+	"github.com/StackVista/stackstate-receiver-go-client/pkg/model/health"
+	"github.com/StackVista/stackstate-receiver-go-client/pkg/model/topology"
 	"sync"
 )
 
@@ -18,56 +20,56 @@ func newMockTransactionalBatcher() *MockTransactionalBatcher {
 }
 
 // SubmitComponent submits a component to the batch
-func (mtb *MockTransactionalBatcher) SubmitComponent(checkID model.CheckID, transactionID string, instance model.Instance, component model.Component) {
+func (mtb *MockTransactionalBatcher) SubmitComponent(checkID model.CheckID, transactionID string, instance topology.Instance, component topology.Component) {
 	mtb.mux.Lock()
 	mtb.CollectedTopology.AddComponent(checkID, transactionID, instance, component)
 	mtb.mux.Unlock()
 }
 
 // SubmitRelation submits a relation to the batch
-func (mtb *MockTransactionalBatcher) SubmitRelation(checkID model.CheckID, transactionID string, instance model.Instance, relation model.Relation) {
+func (mtb *MockTransactionalBatcher) SubmitRelation(checkID model.CheckID, transactionID string, instance topology.Instance, relation topology.Relation) {
 	mtb.mux.Lock()
 	mtb.CollectedTopology.AddRelation(checkID, transactionID, instance, relation)
 	mtb.mux.Unlock()
 }
 
 // SubmitStartSnapshot submits start of a snapshot
-func (mtb *MockTransactionalBatcher) SubmitStartSnapshot(checkID model.CheckID, transactionID string, instance model.Instance) {
+func (mtb *MockTransactionalBatcher) SubmitStartSnapshot(checkID model.CheckID, transactionID string, instance topology.Instance) {
 	mtb.mux.Lock()
 	mtb.CollectedTopology.TopologyStartSnapshot(checkID, transactionID, instance)
 	mtb.mux.Unlock()
 }
 
 // SubmitStopSnapshot submits a stop of a snapshot. This always causes a flush of the data downstream
-func (mtb *MockTransactionalBatcher) SubmitStopSnapshot(checkID model.CheckID, transactionID string, instance model.Instance) {
+func (mtb *MockTransactionalBatcher) SubmitStopSnapshot(checkID model.CheckID, transactionID string, instance topology.Instance) {
 	mtb.mux.Lock()
 	mtb.CollectedTopology.TopologyStopSnapshot(checkID, transactionID, instance)
 	mtb.mux.Unlock()
 }
 
 // SubmitDelete submits a deletion of topology element.
-func (mtb *MockTransactionalBatcher) SubmitDelete(checkID model.CheckID, transactionID string, instance model.Instance, topologyElementID string) {
+func (mtb *MockTransactionalBatcher) SubmitDelete(checkID model.CheckID, transactionID string, instance topology.Instance, topologyElementID string) {
 	mtb.mux.Lock()
 	mtb.CollectedTopology.Delete(checkID, transactionID, instance, topologyElementID)
 	mtb.mux.Unlock()
 }
 
 // SubmitHealthCheckData submits a Health check data record to the batch
-func (mtb *MockTransactionalBatcher) SubmitHealthCheckData(checkID model.CheckID, transactionID string, stream model.Stream, data model.CheckData) {
+func (mtb *MockTransactionalBatcher) SubmitHealthCheckData(checkID model.CheckID, transactionID string, stream health.Stream, data health.CheckData) {
 	mtb.mux.Lock()
 	mtb.CollectedTopology.AddHealthCheckData(checkID, transactionID, stream, data)
 	mtb.mux.Unlock()
 }
 
 // SubmitHealthStartSnapshot submits start of a Health snapshot
-func (mtb *MockTransactionalBatcher) SubmitHealthStartSnapshot(checkID model.CheckID, transactionID string, stream model.Stream, intervalSeconds int, expirySeconds int) {
+func (mtb *MockTransactionalBatcher) SubmitHealthStartSnapshot(checkID model.CheckID, transactionID string, stream health.Stream, intervalSeconds int, expirySeconds int) {
 	mtb.mux.Lock()
 	mtb.CollectedTopology.HealthStartSnapshot(checkID, transactionID, stream, intervalSeconds, expirySeconds)
 	mtb.mux.Unlock()
 }
 
 // SubmitHealthStopSnapshot submits a stop of a Health snapshot. This always causes a flush of the data downstream
-func (mtb *MockTransactionalBatcher) SubmitHealthStopSnapshot(checkID model.CheckID, transactionID string, stream model.Stream) {
+func (mtb *MockTransactionalBatcher) SubmitHealthStopSnapshot(checkID model.CheckID, transactionID string, stream health.Stream) {
 	mtb.mux.Lock()
 	mtb.CollectedTopology.HealthStopSnapshot(checkID, transactionID, stream)
 	mtb.mux.Unlock()
@@ -81,7 +83,7 @@ func (mtb *MockTransactionalBatcher) SubmitRawMetricsData(checkID model.CheckID,
 }
 
 // SubmitEvent submits an event to the batch
-func (mtb *MockTransactionalBatcher) SubmitEvent(checkID model.CheckID, transactionID string, event metrics.Event) {
+func (mtb *MockTransactionalBatcher) SubmitEvent(checkID model.CheckID, transactionID string, event model.Event) {
 	mtb.mux.Lock()
 	mtb.CollectedTopology.AddEvent(checkID, transactionID, event)
 	mtb.mux.Unlock()

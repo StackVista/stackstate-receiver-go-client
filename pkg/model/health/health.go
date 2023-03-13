@@ -1,4 +1,4 @@
-package model
+package health
 
 import (
 	"encoding/json"

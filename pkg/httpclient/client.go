@@ -32,7 +32,7 @@ type HTTPResponse struct {
 // ClientHost specifies an host that the client communicates with.
 type ClientHost struct {
 	APIKey string `json:"-"` // never marshal this
-	Host   string
+	HostURL string
 
 	// NoProxy will be set to true when the proxy setting for the trace API endpoint
 	// needs to be ignored (e.g. it is part of the "no_proxy" list in the yaml settings).
@@ -146,7 +146,7 @@ func (rc *retryableHTTPClient) handleRequest(method, path string, body []byte) *
 
 // makeRequest
 func (rc *retryableHTTPClient) makeRequest(method, path string, body []byte) (*retryablehttp.Request, error) {
-	url := fmt.Sprintf("%s/%s%s", rc.Host, path, fmt.Sprintf("?api_key=%s", rc.APIKey))
+	url := fmt.Sprintf("%s/%s%s", rc.HostURL, path, fmt.Sprintf("?api_key=%s", rc.APIKey))
 	var req *retryablehttp.Request
 	var err error
 	if body != nil {
@@ -168,7 +168,7 @@ func (rc *retryableHTTPClient) makeRequest(method, path string, body []byte) (*r
 	}
 
 	req.Header.Add("sts-api-key", rc.APIKey)
-	req.Header.Add("sts-hostname", rc.Host)
+	req.Header.Add("sts-hostname", rc.HostURL)
 	req.Header.Add("User-Agent", rc.userAgent)
 	req.Header.Add("content-type", "application/json")
 

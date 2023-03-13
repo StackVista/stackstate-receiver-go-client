@@ -1,6 +1,7 @@
 package transactionmanager
 
 import (
+	"github.com/StackVista/stackstate-receiver-go-client/pkg/model"
 	"sync"
 )
 

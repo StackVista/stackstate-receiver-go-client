@@ -1,8 +1,10 @@
 package transactionbatcher
 
 import (
-	"github.com/StackVista/stackstate-agent/pkg/util/log"
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/model"
+	"github.com/StackVista/stackstate-receiver-go-client/pkg/model/health"
+	"github.com/StackVista/stackstate-receiver-go-client/pkg/model/topology"
+	log "github.com/cihub/seelog"
 )
 
 // TransactionalBatcher interface can receive data for sending to the intake and will accumulate the data in batches. This does
@@ -10,22 +12,22 @@ import (
 // data is complete.
 type TransactionalBatcher interface {
 	// Topology
-	SubmitComponent(checkID model.CheckID, transactionID string, instance model.Instance, component model.Component)
-	SubmitRelation(checkID model.CheckID, transactionID string, instance model.Instance, relation model.Relation)
-	SubmitStartSnapshot(checkID model.CheckID, transactionID string, instance model.Instance)
-	SubmitStopSnapshot(checkID model.CheckID, transactionID string, instance model.Instance)
-	SubmitDelete(checkID model.CheckID, transactionID string, instance model.Instance, topologyElementID string)
+	SubmitComponent(checkID model.CheckID, transactionID string, instance topology.Instance, component topology.Component)
+	SubmitRelation(checkID model.CheckID, transactionID string, instance topology.Instance, relation topology.Relation)
+	SubmitStartSnapshot(checkID model.CheckID, transactionID string, instance topology.Instance)
+	SubmitStopSnapshot(checkID model.CheckID, transactionID string, instance topology.Instance)
+	SubmitDelete(checkID model.CheckID, transactionID string, instance topology.Instance, topologyElementID string)
 
 	// Health
-	SubmitHealthCheckData(checkID model.CheckID, transactionID string, stream model.Stream, data model.CheckData)
-	SubmitHealthStartSnapshot(checkID model.CheckID, transactionID string, stream model.Stream, intervalSeconds int, expirySeconds int)
-	SubmitHealthStopSnapshot(checkID model.CheckID, transactionID string, stream model.Stream)
+	SubmitHealthCheckData(checkID model.CheckID, transactionID string, stream health.Stream, data health.CheckData)
+	SubmitHealthStartSnapshot(checkID model.CheckID, transactionID string, stream health.Stream, intervalSeconds int, expirySeconds int)
+	SubmitHealthStopSnapshot(checkID model.CheckID, transactionID string, stream health.Stream)
 
 	// Raw Metrics
 	SubmitRawMetricsData(checkID model.CheckID, transactionID string, data model.RawMetrics)
 
 	// Events
-	SubmitEvent(checkID model.CheckID, transactionID string, event metrics.Event)
+	SubmitEvent(checkID model.CheckID, transactionID string, event model.Event)
 
 	// Transactional
 	StartTransaction(checkID model.CheckID, transactionID string)
@@ -40,45 +42,45 @@ type TransactionalBatcher interface {
 type SubmitComponent struct {
 	CheckID       model.CheckID
 	TransactionID string
-	Instance      model.Instance
-	Component     model.Component
+	Instance      topology.Instance
+	Component     topology.Component
 }
 
 // SubmitRelation is used to submit a relation to the input channel
 type SubmitRelation struct {
 	CheckID       model.CheckID
 	TransactionID string
-	Instance      model.Instance
-	Relation      model.Relation
+	Instance      topology.Instance
+	Relation      topology.Relation
 }
 
 // SubmitStartSnapshot is used to submit a start of a snapshot to the input channel
 type SubmitStartSnapshot struct {
 	CheckID       model.CheckID
 	TransactionID string
-	Instance      model.Instance
+	Instance      topology.Instance
 }
 
 // SubmitStopSnapshot is used to submit a stop of a snapshot to the input channel
 type SubmitStopSnapshot struct {
 	CheckID       model.CheckID
 	TransactionID string
-	Instance      model.Instance
+	Instance      topology.Instance
 }
 
 // SubmitHealthCheckData is used to submit health check data to the input channel
 type SubmitHealthCheckData struct {
 	CheckID       model.CheckID
 	TransactionID string
-	Stream        model.Stream
-	Data          model.CheckData
+	Stream        health.Stream
+	Data          health.CheckData
 }
 
 // SubmitHealthStartSnapshot is used to submit health check start snapshot to the input channel
 type SubmitHealthStartSnapshot struct {
 	CheckID         model.CheckID
 	TransactionID   string
-	Stream          model.Stream
+	Stream          health.Stream
 	IntervalSeconds int
 	ExpirySeconds   int
 }
@@ -87,14 +89,14 @@ type SubmitHealthStartSnapshot struct {
 type SubmitHealthStopSnapshot struct {
 	CheckID       model.CheckID
 	TransactionID string
-	Stream        model.Stream
+	Stream        health.Stream
 }
 
 // SubmitDelete is used to submit a topology delete to the input channel
 type SubmitDelete struct {
 	CheckID       model.CheckID
 	TransactionID string
-	Instance      model.Instance
+	Instance      topology.Instance
 	DeleteID      string
 }
 
@@ -109,7 +111,7 @@ type SubmitRawMetricsData struct {
 type SubmitEvent struct {
 	CheckID       model.CheckID
 	TransactionID string
-	Event         metrics.Event
+	Event         model.Event
 }
 
 // SubmitClearState is used to clear batcher state for a given CheckID
@@ -133,7 +135,7 @@ type SubmitCompleteTransaction struct {
 type SubmitShutdown struct{}
 
 // SubmitComponent submits a component to the batch
-func (ctb *transactionalBatcher) SubmitComponent(checkID model.CheckID, transactionID string, instance model.Instance, component model.Component) {
+func (ctb *transactionalBatcher) SubmitComponent(checkID model.CheckID, transactionID string, instance topology.Instance, component topology.Component) {
 	ctb.Input <- SubmitComponent{
 		CheckID:       checkID,
 		TransactionID: transactionID,
@@ -143,7 +145,7 @@ func (ctb *transactionalBatcher) SubmitComponent(checkID model.CheckID, transact
 }
 
 // SubmitRelation submits a relation to the batch
-func (ctb *transactionalBatcher) SubmitRelation(checkID model.CheckID, transactionID string, instance model.Instance, relation model.Relation) {
+func (ctb *transactionalBatcher) SubmitRelation(checkID model.CheckID, transactionID string, instance topology.Instance, relation topology.Relation) {
 	ctb.Input <- SubmitRelation{
 		CheckID:       checkID,
 		TransactionID: transactionID,
@@ -153,7 +155,7 @@ func (ctb *transactionalBatcher) SubmitRelation(checkID model.CheckID, transacti
 }
 
 // SubmitStartSnapshot submits start of a snapshot
-func (ctb *transactionalBatcher) SubmitStartSnapshot(checkID model.CheckID, transactionID string, instance model.Instance) {
+func (ctb *transactionalBatcher) SubmitStartSnapshot(checkID model.CheckID, transactionID string, instance topology.Instance) {
 	ctb.Input <- SubmitStartSnapshot{
 		CheckID:       checkID,
 		TransactionID: transactionID,
@@ -162,7 +164,7 @@ func (ctb *transactionalBatcher) SubmitStartSnapshot(checkID model.CheckID, tran
 }
 
 // SubmitStopSnapshot submits a stop of a snapshot. This always causes a flush of the data downstream
-func (ctb *transactionalBatcher) SubmitStopSnapshot(checkID model.CheckID, transactionID string, instance model.Instance) {
+func (ctb *transactionalBatcher) SubmitStopSnapshot(checkID model.CheckID, transactionID string, instance topology.Instance) {
 	ctb.Input <- SubmitStopSnapshot{
 		CheckID:       checkID,
 		TransactionID: transactionID,
@@ -171,7 +173,7 @@ func (ctb *transactionalBatcher) SubmitStopSnapshot(checkID model.CheckID, trans
 }
 
 // SubmitDelete submits a deletion of topology element.
-func (ctb *transactionalBatcher) SubmitDelete(checkID model.CheckID, transactionID string, instance model.Instance, topologyElementID string) {
+func (ctb *transactionalBatcher) SubmitDelete(checkID model.CheckID, transactionID string, instance topology.Instance, topologyElementID string) {
 	ctb.Input <- SubmitDelete{
 		CheckID:       checkID,
 		TransactionID: transactionID,
@@ -181,7 +183,7 @@ func (ctb *transactionalBatcher) SubmitDelete(checkID model.CheckID, transaction
 }
 
 // SubmitHealthCheckData submits a Health check data record to the batch
-func (ctb *transactionalBatcher) SubmitHealthCheckData(checkID model.CheckID, transactionID string, stream model.Stream, data model.CheckData) {
+func (ctb *transactionalBatcher) SubmitHealthCheckData(checkID model.CheckID, transactionID string, stream health.Stream, data health.CheckData) {
 	log.Debugf("Submitting Health check data for check [%s] stream [%s]: %s", checkID, stream.GoString(), data.JSONString())
 	ctb.Input <- SubmitHealthCheckData{
 		CheckID:       checkID,
@@ -192,7 +194,7 @@ func (ctb *transactionalBatcher) SubmitHealthCheckData(checkID model.CheckID, tr
 }
 
 // SubmitHealthStartSnapshot submits start of a Health snapshot
-func (ctb *transactionalBatcher) SubmitHealthStartSnapshot(checkID model.CheckID, transactionID string, stream model.Stream, intervalSeconds int, expirySeconds int) {
+func (ctb *transactionalBatcher) SubmitHealthStartSnapshot(checkID model.CheckID, transactionID string, stream health.Stream, intervalSeconds int, expirySeconds int) {
 	ctb.Input <- SubmitHealthStartSnapshot{
 		CheckID:         checkID,
 		TransactionID:   transactionID,
@@ -203,7 +205,7 @@ func (ctb *transactionalBatcher) SubmitHealthStartSnapshot(checkID model.CheckID
 }
 
 // SubmitHealthStopSnapshot submits a stop of a Health snapshot. This always causes a flush of the data downstream
-func (ctb *transactionalBatcher) SubmitHealthStopSnapshot(checkID model.CheckID, transactionID string, stream model.Stream) {
+func (ctb *transactionalBatcher) SubmitHealthStopSnapshot(checkID model.CheckID, transactionID string, stream health.Stream) {
 	ctb.Input <- SubmitHealthStopSnapshot{
 		CheckID:       checkID,
 		TransactionID: transactionID,
@@ -225,7 +227,7 @@ func (ctb *transactionalBatcher) SubmitRawMetricsData(checkID model.CheckID, tra
 }
 
 // SubmitEvent submits an event to the batch
-func (ctb *transactionalBatcher) SubmitEvent(checkID model.CheckID, transactionID string, event metrics.Event) {
+func (ctb *transactionalBatcher) SubmitEvent(checkID model.CheckID, transactionID string, event model.Event) {
 	ctb.Input <- SubmitEvent{
 		CheckID:       checkID,
 		TransactionID: transactionID,

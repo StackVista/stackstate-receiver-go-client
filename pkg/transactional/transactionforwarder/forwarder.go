@@ -1,11 +1,10 @@
 package transactionforwarder
 
 import (
-	"github.com/StackVista/stackstate-agent/pkg/config"
-	"github.com/StackVista/stackstate-agent/pkg/httpclient"
-	"github.com/StackVista/stackstate-agent/pkg/util/log"
+	"github.com/StackVista/stackstate-receiver-go-client/pkg/httpclient"
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/transactional"
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/transactional/transactionmanager"
+	log "github.com/cihub/seelog"
 	"regexp"
 	"sync"
 )
@@ -36,6 +35,7 @@ type Forwarder struct {
 	stsClient       httpclient.RetryableHTTPClient
 	PayloadChannel  chan TransactionalPayload
 	ShutdownChannel chan ShutdownForwarder
+	logPayloads     bool
 }
 
 var (
@@ -48,9 +48,9 @@ func init() {
 }
 
 // InitTransactionalForwarder initializes the global transactional forwarder Instance
-func InitTransactionalForwarder() {
+func InitTransactionalForwarder(host *httpclient.ClientHost) {
 	tfInit.Do(func() {
-		transactionalForwarderInstance = newTransactionalForwarder()
+		transactionalForwarderInstance = newTransactionalForwarder(host)
 	})
 }
 
@@ -76,9 +76,9 @@ func NewPrintingTransactionalForwarder() *PrintingTransactionalForwarder {
 }
 
 // newTransactionalForwarder returns a instance of the forwarder
-func newTransactionalForwarder() *Forwarder {
+func newTransactionalForwarder(host *httpclient.ClientHost) *Forwarder {
 	fwd := &Forwarder{
-		stsClient:       httpclient.NewStackStateClient(),
+		stsClient:       httpclient.NewStackStateClient(host),
 		PayloadChannel:  make(chan TransactionalPayload, 100),
 		ShutdownChannel: make(chan ShutdownForwarder, 1),
 	}
@@ -111,7 +111,7 @@ forwardHandler:
 				f.ProgressTransactions(payload.TransactionActionMap)
 
 				log.Infof("Sent transactional payload, size: %d bytes.", len(payload.Body))
-				if config.Datadog.GetBool("log_payloads") {
+				if f.logPayloads {
 					log.Debugf("Sent transactional payload, response status: %s (%d).", response.Response.Status,
 						response.Response.StatusCode)
 					log.Debugf("Sent transactional payload, content: %v", apiKeyRegExp.ReplaceAllString(string(payload.Body), apiKeyReplacement))

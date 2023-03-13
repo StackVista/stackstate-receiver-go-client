@@ -2,40 +2,40 @@ package transactionbatcher
 
 import (
 	"encoding/json"
-	"github.com/StackVista/stackstate-agent/pkg/config"
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/model"
+	"github.com/StackVista/stackstate-receiver-go-client/pkg/model/health"
+	"github.com/StackVista/stackstate-receiver-go-client/pkg/model/topology"
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/transactional"
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/transactional/transactionforwarder"
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/transactional/transactionmanager"
 	"github.com/stretchr/testify/assert"
-	"os"
 	"sort"
 	"testing"
 	"time"
 )
 
 var (
-	testInstance       = model.Instance{Type: "mytype", URL: "myurl"}
-	testInstance2      = model.Instance{Type: "mytype2", URL: "myurl2"}
+	testInstance       = topology.Instance{Type: "mytype", URL: "myurl"}
+	testInstance2      = topology.Instance{Type: "mytype2", URL: "myurl2"}
 	testHost           = "myhost"
 	testAgent          = "myagent"
 	testID             = model.CheckID("myid")
 	testID2            = model.CheckID("myid2")
 	testTransactionID  = "transaction1"
 	testTransaction2ID = "transaction2"
-	testComponent      = model.Component{
+	testComponent      = topology.Component{
 		ExternalID: "id",
-		Type:       model.Type{Name: "typename"},
+		Type:       topology.Type{Name: "typename"},
 		Data:       map[string]interface{}{},
 	}
-	testComponent2 = model.Component{
+	testComponent2 = topology.Component{
 		ExternalID: "id2",
-		Type:       model.Type{Name: "typename"},
+		Type:       topology.Type{Name: "typename"},
 		Data:       map[string]interface{}{},
 	}
-	testRelation = model.Relation{
+	testRelation = topology.Relation{
 		ExternalID: "id2",
-		Type:       model.Type{Name: "typename"},
+		Type:       topology.Type{Name: "typename"},
 		SourceID:   "source",
 		TargetID:   "target",
 		Data:       map[string]interface{}{},
@@ -43,11 +43,11 @@ var (
 	testDeleteID1 = "delete-id-1"
 	testDeleteID2 = "delete-id-2"
 
-	testStream        = model.Stream{Urn: "urn", SubStream: "bla"}
-	testStream2       = model.Stream{Urn: "urn"}
-	testStartSnapshot = &model.StartSnapshotMetadata{ExpiryIntervalS: 0, RepeatIntervalS: 1}
-	testStopSnapshot  = &model.StopSnapshotMetadata{}
-	testCheckData     = model.CheckData{Unstructured: map[string]interface{}{}}
+	testStream        = health.Stream{Urn: "urn", SubStream: "bla"}
+	testStream2       = health.Stream{Urn: "urn"}
+	testStartSnapshot = &health.StartSnapshotMetadata{ExpiryIntervalS: 0, RepeatIntervalS: 1}
+	testStopSnapshot  = &health.StopSnapshotMetadata{}
+	testCheckData     = health.CheckData{Unstructured: map[string]interface{}{}}
 
 	testRawMetricsData = model.RawMetrics{
 		Name:      "name",
@@ -73,43 +73,43 @@ var (
 	testRawMetricsDataIntakeMetric  = testRawMetricsData.IntakeMetricJSON()
 	testRawMetricsDataIntakeMetric2 = testRawMetricsData2.IntakeMetricJSON()
 
-	testEvent = metrics.Event{
+	testEvent = model.Event{
 		Title:          "test-event-1",
 		Ts:             time.Now().Unix(),
 		EventType:      "docker",
 		Tags:           []string{"my", "test", "tags"},
 		AggregationKey: "docker:redis",
 		SourceTypeName: "docker",
-		Priority:       metrics.EventPriorityNormal,
+		Priority:       model.EventPriorityNormal,
 	}
-	testEvent2 = metrics.Event{
+	testEvent2 = model.Event{
 		Title:          "test-event-2",
 		Ts:             time.Now().Unix(),
 		EventType:      "docker",
 		Tags:           []string{"my", "test", "tags"},
 		AggregationKey: "docker:mysql",
 		SourceTypeName: "docker",
-		Priority:       metrics.EventPriorityNormal,
-		EventContext: &metrics.EventContext{
+		Priority:       model.EventPriorityNormal,
+		EventContext: &model.EventContext{
 			Data:     map[string]interface{}{},
 			Source:   "docker",
 			Category: "containers",
 		},
 	}
-	testEvent3 = metrics.Event{
+	testEvent3 = model.Event{
 		Title:          "test-event-3",
 		Ts:             time.Now().Unix(),
 		EventType:      "docker",
 		Tags:           []string{"my", "test", "tags"},
 		AggregationKey: "docker:mysql",
 		SourceTypeName: "docker-other",
-		Priority:       metrics.EventPriorityNormal,
-		EventContext: &metrics.EventContext{
+		Priority:       model.EventPriorityNormal,
+		EventContext: &model.EventContext{
 			Data:               map[string]interface{}{},
 			Source:             "docker",
 			Category:           "containers",
 			ElementIdentifiers: []string{"element-identifier"},
-			SourceLinks:        []metrics.SourceLink{{Title: "source-link", URL: "source-url"}},
+			SourceLinks:        []model.SourceLink{{Title: "source-link", URL: "source-url"}},
 		},
 	}
 )
@@ -193,11 +193,10 @@ func testBatcher(t *testing.T, transactionState map[string]bool, expectedPayload
 	}
 
 	assert.Equal(t, expectedTransactionMap, payload.TransactionActionMap)
-
 }
 
 func TestBatchNoPayloadOnlyCompleteTransaction(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100)
+	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
 	batcher.SubmitCompleteTransaction(testID, testTransactionID)
 
 	transactionStates := map[string]bool{
@@ -212,19 +211,19 @@ func TestBatchNoPayloadOnlyCompleteTransaction(t *testing.T) {
 }
 
 func TestBatchFlushSnapshotOnComplete(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100)
+	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
 	batcher.SubmitStopSnapshot(testID, testTransactionID, testInstance)
 	batcher.SubmitCompleteTransaction(testID, testTransactionID)
 
 	expectedPayload := transactional.NewIntakePayload()
 	expectedPayload.InternalHostname = "myhost"
-	expectedPayload.Topologies = []model.Topology{
+	expectedPayload.Topologies = []topology.Topology{
 		{
 			StartSnapshot: false,
 			StopSnapshot:  true,
 			Instance:      testInstance,
-			Components:    []model.Component{},
-			Relations:     []model.Relation{},
+			Components:    []topology.Component{},
+			Relations:     []topology.Relation{},
 			DeleteIDs:     []string{},
 		},
 	}
@@ -238,18 +237,18 @@ func TestBatchFlushSnapshotOnComplete(t *testing.T) {
 }
 
 func TestBatchFlushHealthOnComplete(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100)
+	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
 
 	batcher.SubmitHealthStopSnapshot(testID, testTransactionID, testStream)
 	batcher.SubmitCompleteTransaction(testID, testTransactionID)
 
 	expectedPayload := transactional.NewIntakePayload()
 	expectedPayload.InternalHostname = "myhost"
-	expectedPayload.Health = []model.Health{
+	expectedPayload.Health = []health.Health{
 		{
 			StopSnapshot: testStopSnapshot,
 			Stream:       testStream,
-			CheckStates:  []model.CheckData{},
+			CheckStates:  []health.CheckData{},
 		},
 	}
 
@@ -262,7 +261,7 @@ func TestBatchFlushHealthOnComplete(t *testing.T) {
 }
 
 func TestBatchFlushOnComplete(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100)
+	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
 
 	batcher.SubmitComponent(testID, testTransactionID, testInstance, testComponent)
 	batcher.SubmitHealthCheckData(testID, testTransactionID, testStream, testCheckData)
@@ -273,24 +272,24 @@ func TestBatchFlushOnComplete(t *testing.T) {
 
 	expectedPayload := transactional.NewIntakePayload()
 	expectedPayload.InternalHostname = "myhost"
-	expectedPayload.Topologies = []model.Topology{
+	expectedPayload.Topologies = []topology.Topology{
 		{
 			StartSnapshot: false,
 			StopSnapshot:  false,
 			Instance:      testInstance,
-			Components:    []model.Component{testComponent},
-			Relations:     []model.Relation{},
+			Components:    []topology.Component{testComponent},
+			Relations:     []topology.Relation{},
 			DeleteIDs:     []string{},
 		},
 	}
-	expectedPayload.Health = []model.Health{
+	expectedPayload.Health = []health.Health{
 		{
 			Stream:      testStream,
-			CheckStates: []model.CheckData{testCheckData},
+			CheckStates: []health.CheckData{testCheckData},
 		},
 	}
 	expectedPayload.Metrics = []interface{}{testRawMetricsDataIntakeMetric, testRawMetricsDataIntakeMetric2}
-	expectedPayload.Events = map[string][]metrics.Event{
+	expectedPayload.Events = map[string][]model.Event{
 		"docker": {testEvent},
 	}
 
@@ -303,7 +302,7 @@ func TestBatchFlushOnComplete(t *testing.T) {
 }
 
 func TestBatchDataCompleteTransaction(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100)
+	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
 
 	batcher.StartTransaction(testID, testTransactionID)
 	batcher.SubmitComponent(testID, testTransactionID, testInstance, testComponent)
@@ -311,13 +310,13 @@ func TestBatchDataCompleteTransaction(t *testing.T) {
 
 	expectedPayload := transactional.NewIntakePayload()
 	expectedPayload.InternalHostname = "myhost"
-	expectedPayload.Topologies = []model.Topology{
+	expectedPayload.Topologies = []topology.Topology{
 		{
 			StartSnapshot: false,
 			StopSnapshot:  false,
 			Instance:      testInstance,
-			Components:    []model.Component{testComponent},
-			Relations:     []model.Relation{},
+			Components:    []topology.Component{testComponent},
+			Relations:     []topology.Relation{},
 			DeleteIDs:     []string{},
 		},
 	}
@@ -334,13 +333,13 @@ func TestBatchDataCompleteTransaction(t *testing.T) {
 
 	expectedPayload = transactional.NewIntakePayload()
 	expectedPayload.InternalHostname = "myhost"
-	expectedPayload.Topologies = []model.Topology{
+	expectedPayload.Topologies = []topology.Topology{
 		{
 			StartSnapshot: false,
 			StopSnapshot:  true,
 			Instance:      testInstance,
-			Components:    []model.Component{},
-			Relations:     []model.Relation{},
+			Components:    []topology.Component{},
+			Relations:     []topology.Relation{},
 			DeleteIDs:     []string{},
 		},
 	}
@@ -354,7 +353,7 @@ func TestBatchDataCompleteTransaction(t *testing.T) {
 }
 
 func TestBatchMultipleTopologiesAndHealthStreams(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100)
+	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
 
 	batcher.SubmitStartSnapshot(testID, testTransactionID, testInstance)
 	batcher.SubmitComponent(testID, testTransactionID, testInstance, testComponent)
@@ -382,33 +381,33 @@ func TestBatchMultipleTopologiesAndHealthStreams(t *testing.T) {
 
 	expectedPayload := transactional.NewIntakePayload()
 	expectedPayload.InternalHostname = "myhost"
-	expectedPayload.Topologies = []model.Topology{
+	expectedPayload.Topologies = []topology.Topology{
 		{
 			StartSnapshot: true,
 			StopSnapshot:  true,
 			Instance:      testInstance,
-			Components:    []model.Component{testComponent},
-			Relations:     []model.Relation{},
+			Components:    []topology.Component{testComponent},
+			Relations:     []topology.Relation{},
 			DeleteIDs:     []string{testDeleteID1},
 		},
 		{
 			StartSnapshot: false,
 			StopSnapshot:  false,
 			Instance:      testInstance2,
-			Components:    []model.Component{testComponent, testComponent, testComponent},
-			Relations:     []model.Relation{},
+			Components:    []topology.Component{testComponent, testComponent, testComponent},
+			Relations:     []topology.Relation{},
 			DeleteIDs:     []string{testDeleteID2},
 		},
 	}
-	expectedPayload.Health = []model.Health{
+	expectedPayload.Health = []health.Health{
 		{
 			StartSnapshot: testStartSnapshot,
 			Stream:        testStream,
-			CheckStates:   []model.CheckData{testCheckData},
+			CheckStates:   []health.CheckData{testCheckData},
 		},
 		{
 			Stream:      testStream2,
-			CheckStates: []model.CheckData{testCheckData},
+			CheckStates: []health.CheckData{testCheckData},
 		},
 	}
 	// order in submission doesn't matter, each state (check) is added after one another
@@ -419,7 +418,7 @@ func TestBatchMultipleTopologiesAndHealthStreams(t *testing.T) {
 		testRawMetricsDataIntakeMetric2,
 	}
 
-	expectedPayload.Events = map[string][]metrics.Event{
+	expectedPayload.Events = map[string][]model.Event{
 		"docker":       {testEvent, testEvent2},
 		"docker-other": {testEvent3},
 	}
@@ -435,20 +434,20 @@ func TestBatchMultipleTopologiesAndHealthStreams(t *testing.T) {
 }
 
 func TestBatchFlushOnMaxElements(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 2)
+	batcher := newTransactionalBatcher(testHost, testAgent, 2, true)
 
 	batcher.SubmitComponent(testID, testTransactionID, testInstance, testComponent)
 	batcher.SubmitComponent(testID, testTransactionID, testInstance, testComponent2)
 
 	expectedPayload := transactional.NewIntakePayload()
 	expectedPayload.InternalHostname = "myhost"
-	expectedPayload.Topologies = []model.Topology{
+	expectedPayload.Topologies = []topology.Topology{
 		{
 			StartSnapshot: false,
 			StopSnapshot:  false,
 			Instance:      testInstance,
-			Components:    []model.Component{testComponent, testComponent2},
-			Relations:     []model.Relation{},
+			Components:    []topology.Component{testComponent, testComponent2},
+			Relations:     []topology.Relation{},
 			DeleteIDs:     []string{},
 		},
 	}
@@ -463,17 +462,17 @@ func TestBatchFlushOnMaxElements(t *testing.T) {
 }
 
 func TestBatchFlushOnMaxHealthElements(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 2)
+	batcher := newTransactionalBatcher(testHost, testAgent, 2, true)
 
 	batcher.SubmitHealthCheckData(testID, testTransactionID, testStream, testCheckData)
 	batcher.SubmitHealthCheckData(testID, testTransactionID, testStream, testCheckData)
 
 	expectedPayload := transactional.NewIntakePayload()
 	expectedPayload.InternalHostname = "myhost"
-	expectedPayload.Health = []model.Health{
+	expectedPayload.Health = []health.Health{
 		{
 			Stream:      testStream,
-			CheckStates: []model.CheckData{testCheckData, testCheckData},
+			CheckStates: []health.CheckData{testCheckData, testCheckData},
 		},
 	}
 
@@ -487,7 +486,7 @@ func TestBatchFlushOnMaxHealthElements(t *testing.T) {
 }
 
 func TestBatchFlushOnMaxRawMetricsElements(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 2)
+	batcher := newTransactionalBatcher(testHost, testAgent, 2, true)
 
 	batcher.SubmitRawMetricsData(testID, testTransactionID, testRawMetricsData)
 	batcher.SubmitRawMetricsData(testID, testTransactionID, testRawMetricsData2)
@@ -508,14 +507,14 @@ func TestBatchFlushOnMaxRawMetricsElements(t *testing.T) {
 }
 
 func TestBatchFlushOnMaxEvents(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 2)
+	batcher := newTransactionalBatcher(testHost, testAgent, 2, true)
 
 	batcher.SubmitEvent(testID, testTransactionID, testEvent)
 	batcher.SubmitEvent(testID, testTransactionID, testEvent2)
 
 	expectedPayload := transactional.NewIntakePayload()
 	expectedPayload.InternalHostname = "myhost"
-	expectedPayload.Events = map[string][]metrics.Event{
+	expectedPayload.Events = map[string][]model.Event{
 		"docker": {testEvent, testEvent2},
 	}
 
@@ -530,8 +529,7 @@ func TestBatchFlushOnMaxEvents(t *testing.T) {
 
 func TestBatchFlushOnMaxElementsEnv(t *testing.T) {
 	// set transactionbatcher max capacity via ENV var
-	os.Setenv("DD_BATCHER_CAPACITY", "1")
-	batcher := newTransactionalBatcher(testHost, testAgent, config.GetMaxCapacity())
+	batcher := newTransactionalBatcher(testHost, testAgent, 1, true)
 
 	assert.Equal(t, 1, batcher.builder.maxCapacity)
 
@@ -539,13 +537,13 @@ func TestBatchFlushOnMaxElementsEnv(t *testing.T) {
 
 	expectedPayload := transactional.NewIntakePayload()
 	expectedPayload.InternalHostname = "myhost"
-	expectedPayload.Topologies = []model.Topology{
+	expectedPayload.Topologies = []topology.Topology{
 		{
 			StartSnapshot: false,
 			StopSnapshot:  false,
 			Instance:      testInstance,
-			Components:    []model.Component{testComponent},
-			Relations:     []model.Relation{},
+			Components:    []topology.Component{testComponent},
+			Relations:     []topology.Relation{},
 			DeleteIDs:     []string{},
 		},
 	}
@@ -557,25 +555,23 @@ func TestBatchFlushOnMaxElementsEnv(t *testing.T) {
 	testBatcher(t, transactionStates, expectedPayload)
 
 	batcher.Stop()
-
-	os.Unsetenv("STS_BATCHER_CAPACITY")
 }
 
 func TestBatcherStartSnapshot(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100)
+	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
 
 	batcher.SubmitStartSnapshot(testID, testTransactionID, testInstance)
 	batcher.SubmitCompleteTransaction(testID, testTransactionID)
 
 	expectedPayload := transactional.NewIntakePayload()
 	expectedPayload.InternalHostname = "myhost"
-	expectedPayload.Topologies = []model.Topology{
+	expectedPayload.Topologies = []topology.Topology{
 		{
 			StartSnapshot: true,
 			StopSnapshot:  false,
 			Instance:      testInstance,
-			Components:    []model.Component{},
-			Relations:     []model.Relation{},
+			Components:    []topology.Component{},
+			Relations:     []topology.Relation{},
 			DeleteIDs:     []string{},
 		},
 	}
@@ -590,20 +586,20 @@ func TestBatcherStartSnapshot(t *testing.T) {
 }
 
 func TestBatcherRelation(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100)
+	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
 
 	batcher.SubmitRelation(testID, testTransactionID, testInstance, testRelation)
 	batcher.SubmitCompleteTransaction(testID, testTransactionID)
 
 	expectedPayload := transactional.NewIntakePayload()
 	expectedPayload.InternalHostname = "myhost"
-	expectedPayload.Topologies = []model.Topology{
+	expectedPayload.Topologies = []topology.Topology{
 		{
 			StartSnapshot: false,
 			StopSnapshot:  false,
 			Instance:      testInstance,
-			Components:    []model.Component{},
-			Relations:     []model.Relation{testRelation},
+			Components:    []topology.Component{},
+			Relations:     []topology.Relation{testRelation},
 			DeleteIDs:     []string{},
 		},
 	}
@@ -618,18 +614,18 @@ func TestBatcherRelation(t *testing.T) {
 }
 
 func TestBatcherHealthStartSnapshot(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100)
+	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
 
 	batcher.SubmitHealthStartSnapshot(testID, testTransactionID, testStream, 1, 0)
 	batcher.SubmitCompleteTransaction(testID, testTransactionID)
 
 	expectedPayload := transactional.NewIntakePayload()
 	expectedPayload.InternalHostname = "myhost"
-	expectedPayload.Health = []model.Health{
+	expectedPayload.Health = []health.Health{
 		{
 			StartSnapshot: testStartSnapshot,
 			Stream:        testStream,
-			CheckStates:   []model.CheckData{},
+			CheckStates:   []health.CheckData{},
 		},
 	}
 
@@ -643,7 +639,7 @@ func TestBatcherHealthStartSnapshot(t *testing.T) {
 }
 
 func TestBatchMultipleHealthStreams(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100)
+	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
 
 	batcher.SubmitHealthStartSnapshot(testID, testTransactionID, testStream, 1, 0)
 	batcher.SubmitHealthStartSnapshot(testID, testTransactionID, testStream2, 1, 0)
@@ -651,16 +647,16 @@ func TestBatchMultipleHealthStreams(t *testing.T) {
 
 	expectedPayload := transactional.NewIntakePayload()
 	expectedPayload.InternalHostname = "myhost"
-	expectedPayload.Health = []model.Health{
+	expectedPayload.Health = []health.Health{
 		{
 			StartSnapshot: testStartSnapshot,
 			Stream:        testStream,
-			CheckStates:   []model.CheckData{},
+			CheckStates:   []health.CheckData{},
 		},
 		{
 			StartSnapshot: testStartSnapshot,
 			Stream:        testStream2,
-			CheckStates:   []model.CheckData{},
+			CheckStates:   []health.CheckData{},
 		},
 	}
 
@@ -674,7 +670,7 @@ func TestBatchMultipleHealthStreams(t *testing.T) {
 }
 
 func TestBatchClearState(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100)
+	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
 
 	batcher.StartTransaction(testID, testTransactionID)
 	batcher.SubmitStartSnapshot(testID, testTransactionID, testInstance)
@@ -694,17 +690,17 @@ func TestBatchClearState(t *testing.T) {
 
 	expectedPayload := transactional.NewIntakePayload()
 	expectedPayload.InternalHostname = "myhost"
-	expectedPayload.Topologies = []model.Topology{
+	expectedPayload.Topologies = []topology.Topology{
 		{
 			StartSnapshot: true,
 			StopSnapshot:  false,
 			Instance:      testInstance,
-			Components:    []model.Component{testComponent},
-			Relations:     []model.Relation{},
+			Components:    []topology.Component{testComponent},
+			Relations:     []topology.Relation{},
 			DeleteIDs:     []string{testDeleteID1},
 		},
 	}
-	expectedPayload.Events = map[string][]metrics.Event{
+	expectedPayload.Events = map[string][]model.Event{
 		"docker": {testEvent},
 	}
 

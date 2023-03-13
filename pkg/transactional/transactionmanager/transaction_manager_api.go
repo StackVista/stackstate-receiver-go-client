@@ -1,7 +1,8 @@
 package transactionmanager
 
 import (
-	"github.com/StackVista/stackstate-agent/pkg/util/log"
+	"github.com/StackVista/stackstate-receiver-go-client/pkg/model"
+	log "github.com/cihub/seelog"
 	"sync"
 )
 

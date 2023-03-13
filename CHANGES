@@ -1,0 +1,2 @@
+This library is based on code and datastructures from the github.com/DataDog/datadog-agent with significant changes done
+to included topology and StackState-specific concepts.
