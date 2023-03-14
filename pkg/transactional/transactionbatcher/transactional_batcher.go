@@ -15,6 +15,8 @@ import (
 var (
 	batcherInstance TransactionalBatcher
 	batcherInit     *sync.Once
+
+	DefaultBatcherBufferSize = 10000
 )
 
 func init() {
