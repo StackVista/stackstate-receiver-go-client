@@ -1,8 +1,6 @@
 package transactionforwarder
 
-import "sync"
-
-func createMockForwarder() *MockTransactionalForwarder {
+func NewMockTransactionalForwarder() *MockTransactionalForwarder {
 	return &MockTransactionalForwarder{PayloadChan: make(chan TransactionalPayload, 100)}
 }
 
@@ -27,6 +25,4 @@ func (mf *MockTransactionalForwarder) NextPayload() TransactionalPayload {
 // Stop closes the payload channel and resets the singleton init
 func (mf *MockTransactionalForwarder) Stop() {
 	close(mf.PayloadChan)
-	// reset the tmInit to re-init the transactional forwarder
-	tfInit = new(sync.Once)
 }

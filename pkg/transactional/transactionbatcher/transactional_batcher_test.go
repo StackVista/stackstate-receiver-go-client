@@ -122,10 +122,7 @@ func init() {
 
 // TODO: these might hit nil pointers in the batcher because we only init the transaction manager and forwarder in the testBatcher function
 // TODO: after the batcher operations have been executed
-func testBatcher(t *testing.T, transactionState map[string]bool, expectedPayload transactional.IntakePayload) {
-	tm := transactionmanager.GetTransactionManager().(*transactionmanager.MockTransactionManager)
-	fwd := transactionforwarder.GetTransactionalForwarder().(*transactionforwarder.MockTransactionalForwarder)
-
+func testBatcher(t *testing.T, tm *transactionmanager.MockTransactionManager, fwd *transactionforwarder.MockTransactionalForwarder, transactionState map[string]bool, expectedPayload transactional.IntakePayload) {
 	// get the action commit made by the batcher from the transaction manager for all the transactions in this payload
 	commitActions := make(map[string]transactionmanager.CommitAction, len(transactionState))
 	var foundTx []string
@@ -197,7 +194,10 @@ func testBatcher(t *testing.T, transactionState map[string]bool, expectedPayload
 }
 
 func TestBatchNoPayloadOnlyCompleteTransaction(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
+	tm := transactionmanager.NewMockTransactionManager()
+	fwd := transactionforwarder.NewMockTransactionalForwarder()
+
+	batcher := NewTransactionalBatcher(testHost, testAgent, 100, fwd, tm, true)
 	batcher.SubmitCompleteTransaction(testID, testTransactionID)
 
 	transactionStates := map[string]bool{
@@ -206,13 +206,16 @@ func TestBatchNoPayloadOnlyCompleteTransaction(t *testing.T) {
 	expectedPayload := transactional.NewIntakePayload()
 	expectedPayload.InternalHostname = "myhost"
 
-	testBatcher(t, transactionStates, expectedPayload)
+	testBatcher(t, tm, fwd, transactionStates, expectedPayload)
 
 	batcher.Stop()
 }
 
 func TestBatchFlushSnapshotOnComplete(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
+	tm := transactionmanager.NewMockTransactionManager()
+	fwd := transactionforwarder.NewMockTransactionalForwarder()
+
+	batcher := NewTransactionalBatcher(testHost, testAgent, 100, fwd, tm, true)
 	batcher.SubmitStopSnapshot(testID, testTransactionID, testInstance)
 	batcher.SubmitCompleteTransaction(testID, testTransactionID)
 
@@ -232,13 +235,16 @@ func TestBatchFlushSnapshotOnComplete(t *testing.T) {
 	transactionStates := map[string]bool{
 		testTransactionID: true,
 	}
-	testBatcher(t, transactionStates, expectedPayload)
+	testBatcher(t, tm, fwd, transactionStates, expectedPayload)
 
 	batcher.Stop()
 }
 
 func TestBatchFlushHealthOnComplete(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
+	tm := transactionmanager.NewMockTransactionManager()
+	fwd := transactionforwarder.NewMockTransactionalForwarder()
+
+	batcher := NewTransactionalBatcher(testHost, testAgent, 100, fwd, tm, true)
 
 	batcher.SubmitHealthStopSnapshot(testID, testTransactionID, testStream)
 	batcher.SubmitCompleteTransaction(testID, testTransactionID)
@@ -256,13 +262,16 @@ func TestBatchFlushHealthOnComplete(t *testing.T) {
 	transactionStates := map[string]bool{
 		testTransactionID: true,
 	}
-	testBatcher(t, transactionStates, expectedPayload)
+	testBatcher(t, tm, fwd, transactionStates, expectedPayload)
 
 	batcher.Stop()
 }
 
 func TestBatchFlushOnComplete(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
+	tm := transactionmanager.NewMockTransactionManager()
+	fwd := transactionforwarder.NewMockTransactionalForwarder()
+
+	batcher := NewTransactionalBatcher(testHost, testAgent, 100, fwd, tm, true)
 
 	batcher.SubmitComponent(testID, testTransactionID, testInstance, testComponent)
 	batcher.SubmitHealthCheckData(testID, testTransactionID, testStream, testCheckData)
@@ -297,13 +306,16 @@ func TestBatchFlushOnComplete(t *testing.T) {
 	transactionStates := map[string]bool{
 		testTransactionID: true,
 	}
-	testBatcher(t, transactionStates, expectedPayload)
+	testBatcher(t, tm, fwd, transactionStates, expectedPayload)
 
 	batcher.Stop()
 }
 
 func TestBatchDataCompleteTransaction(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
+	tm := transactionmanager.NewMockTransactionManager()
+	fwd := transactionforwarder.NewMockTransactionalForwarder()
+
+	batcher := NewTransactionalBatcher(testHost, testAgent, 100, fwd, tm, true)
 
 	batcher.StartTransaction(testID, testTransactionID)
 	batcher.SubmitComponent(testID, testTransactionID, testInstance, testComponent)
@@ -326,7 +338,7 @@ func TestBatchDataCompleteTransaction(t *testing.T) {
 		testTransactionID:  false,
 		testTransaction2ID: true,
 	}
-	testBatcher(t, transactionStates, expectedPayload)
+	testBatcher(t, tm, fwd, transactionStates, expectedPayload)
 
 	// We now send a stop to trigger a combined commit
 	batcher.SubmitStopSnapshot(testID, testTransactionID, testInstance)
@@ -348,13 +360,16 @@ func TestBatchDataCompleteTransaction(t *testing.T) {
 	transactionStates = map[string]bool{
 		testTransactionID: true,
 	}
-	testBatcher(t, transactionStates, expectedPayload)
+	testBatcher(t, tm, fwd, transactionStates, expectedPayload)
 
 	batcher.Stop()
 }
 
 func TestBatchMultipleTopologiesAndHealthStreams(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
+	tm := transactionmanager.NewMockTransactionManager()
+	fwd := transactionforwarder.NewMockTransactionalForwarder()
+
+	batcher := NewTransactionalBatcher(testHost, testAgent, 100, fwd, tm, true)
 
 	batcher.SubmitStartSnapshot(testID, testTransactionID, testInstance)
 	batcher.SubmitComponent(testID, testTransactionID, testInstance, testComponent)
@@ -429,13 +444,16 @@ func TestBatchMultipleTopologiesAndHealthStreams(t *testing.T) {
 		testTransaction2ID: false,
 	}
 
-	testBatcher(t, transactionStates, expectedPayload)
+	testBatcher(t, tm, fwd, transactionStates, expectedPayload)
 
 	batcher.Stop()
 }
 
 func TestBatchFlushOnMaxElements(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 2, true)
+	tm := transactionmanager.NewMockTransactionManager()
+	fwd := transactionforwarder.NewMockTransactionalForwarder()
+
+	batcher := NewTransactionalBatcher(testHost, testAgent, 2, fwd, tm, true)
 
 	batcher.SubmitComponent(testID, testTransactionID, testInstance, testComponent)
 	batcher.SubmitComponent(testID, testTransactionID, testInstance, testComponent2)
@@ -457,13 +475,16 @@ func TestBatchFlushOnMaxElements(t *testing.T) {
 		testTransactionID: false,
 	}
 
-	testBatcher(t, transactionStates, expectedPayload)
+	testBatcher(t, tm, fwd, transactionStates, expectedPayload)
 
 	batcher.Stop()
 }
 
 func TestBatchFlushOnMaxHealthElements(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 2, true)
+	tm := transactionmanager.NewMockTransactionManager()
+	fwd := transactionforwarder.NewMockTransactionalForwarder()
+
+	batcher := NewTransactionalBatcher(testHost, testAgent, 2, fwd, tm, true)
 
 	batcher.SubmitHealthCheckData(testID, testTransactionID, testStream, testCheckData)
 	batcher.SubmitHealthCheckData(testID, testTransactionID, testStream, testCheckData)
@@ -481,13 +502,16 @@ func TestBatchFlushOnMaxHealthElements(t *testing.T) {
 		testTransactionID: false,
 	}
 
-	testBatcher(t, transactionStates, expectedPayload)
+	testBatcher(t, tm, fwd, transactionStates, expectedPayload)
 
 	batcher.Stop()
 }
 
 func TestBatchFlushOnMaxRawMetricsElements(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 2, true)
+	tm := transactionmanager.NewMockTransactionManager()
+	fwd := transactionforwarder.NewMockTransactionalForwarder()
+
+	batcher := NewTransactionalBatcher(testHost, testAgent, 2, fwd, tm, true)
 
 	batcher.SubmitRawMetricsData(testID, testTransactionID, testRawMetricsData)
 	batcher.SubmitRawMetricsData(testID, testTransactionID, testRawMetricsData2)
@@ -502,13 +526,16 @@ func TestBatchFlushOnMaxRawMetricsElements(t *testing.T) {
 		testTransactionID: false,
 	}
 
-	testBatcher(t, transactionStates, expectedPayload)
+	testBatcher(t, tm, fwd, transactionStates, expectedPayload)
 
 	batcher.Stop()
 }
 
 func TestBatchFlushOnMaxEvents(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 2, true)
+	tm := transactionmanager.NewMockTransactionManager()
+	fwd := transactionforwarder.NewMockTransactionalForwarder()
+
+	batcher := NewTransactionalBatcher(testHost, testAgent, 2, fwd, tm, true)
 
 	batcher.SubmitEvent(testID, testTransactionID, testEvent)
 	batcher.SubmitEvent(testID, testTransactionID, testEvent2)
@@ -523,14 +550,17 @@ func TestBatchFlushOnMaxEvents(t *testing.T) {
 		testTransactionID: false,
 	}
 
-	testBatcher(t, transactionStates, expectedPayload)
+	testBatcher(t, tm, fwd, transactionStates, expectedPayload)
 
 	batcher.Stop()
 }
 
 func TestBatchFlushOnMaxElementsEnv(t *testing.T) {
+	tm := transactionmanager.NewMockTransactionManager()
+	fwd := transactionforwarder.NewMockTransactionalForwarder()
+
 	// set transactionbatcher max capacity via ENV var
-	batcher := newTransactionalBatcher(testHost, testAgent, 1, true)
+	batcher := NewTransactionalBatcher(testHost, testAgent, 1, fwd, tm, true)
 
 	assert.Equal(t, 1, batcher.builder.maxCapacity)
 
@@ -553,13 +583,16 @@ func TestBatchFlushOnMaxElementsEnv(t *testing.T) {
 		testTransactionID: false,
 	}
 
-	testBatcher(t, transactionStates, expectedPayload)
+	testBatcher(t, tm, fwd, transactionStates, expectedPayload)
 
 	batcher.Stop()
 }
 
 func TestBatcherStartSnapshot(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
+	tm := transactionmanager.NewMockTransactionManager()
+	fwd := transactionforwarder.NewMockTransactionalForwarder()
+
+	batcher := NewTransactionalBatcher(testHost, testAgent, 100, fwd, tm, true)
 
 	batcher.SubmitStartSnapshot(testID, testTransactionID, testInstance)
 	batcher.SubmitCompleteTransaction(testID, testTransactionID)
@@ -581,13 +614,16 @@ func TestBatcherStartSnapshot(t *testing.T) {
 		testTransactionID: true,
 	}
 
-	testBatcher(t, transactionStates, expectedPayload)
+	testBatcher(t, tm, fwd, transactionStates, expectedPayload)
 
 	batcher.Stop()
 }
 
 func TestBatcherRelation(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
+	tm := transactionmanager.NewMockTransactionManager()
+	fwd := transactionforwarder.NewMockTransactionalForwarder()
+
+	batcher := NewTransactionalBatcher(testHost, testAgent, 100, fwd, tm, true)
 
 	batcher.SubmitRelation(testID, testTransactionID, testInstance, testRelation)
 	batcher.SubmitCompleteTransaction(testID, testTransactionID)
@@ -609,13 +645,16 @@ func TestBatcherRelation(t *testing.T) {
 		testTransactionID: true,
 	}
 
-	testBatcher(t, transactionStates, expectedPayload)
+	testBatcher(t, tm, fwd, transactionStates, expectedPayload)
 
 	batcher.Stop()
 }
 
 func TestBatcherHealthStartSnapshot(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
+	tm := transactionmanager.NewMockTransactionManager()
+	fwd := transactionforwarder.NewMockTransactionalForwarder()
+
+	batcher := NewTransactionalBatcher(testHost, testAgent, 100, fwd, tm, true)
 
 	batcher.SubmitHealthStartSnapshot(testID, testTransactionID, testStream, 1, 0)
 	batcher.SubmitCompleteTransaction(testID, testTransactionID)
@@ -634,13 +673,16 @@ func TestBatcherHealthStartSnapshot(t *testing.T) {
 		testTransactionID: true,
 	}
 
-	testBatcher(t, transactionStates, expectedPayload)
+	testBatcher(t, tm, fwd, transactionStates, expectedPayload)
 
 	batcher.Stop()
 }
 
 func TestBatchMultipleHealthStreams(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
+	tm := transactionmanager.NewMockTransactionManager()
+	fwd := transactionforwarder.NewMockTransactionalForwarder()
+
+	batcher := NewTransactionalBatcher(testHost, testAgent, 100, fwd, tm, true)
 
 	batcher.SubmitHealthStartSnapshot(testID, testTransactionID, testStream, 1, 0)
 	batcher.SubmitHealthStartSnapshot(testID, testTransactionID, testStream2, 1, 0)
@@ -665,13 +707,16 @@ func TestBatchMultipleHealthStreams(t *testing.T) {
 		testTransactionID: true,
 	}
 
-	testBatcher(t, transactionStates, expectedPayload)
+	testBatcher(t, tm, fwd, transactionStates, expectedPayload)
 
 	batcher.Stop()
 }
 
 func TestBatchClearState(t *testing.T) {
-	batcher := newTransactionalBatcher(testHost, testAgent, 100, true)
+	tm := transactionmanager.NewMockTransactionManager()
+	fwd := transactionforwarder.NewMockTransactionalForwarder()
+
+	batcher := NewTransactionalBatcher(testHost, testAgent, 100, fwd, tm, true)
 
 	batcher.StartTransaction(testID, testTransactionID)
 	batcher.SubmitStartSnapshot(testID, testTransactionID, testInstance)
@@ -709,7 +754,7 @@ func TestBatchClearState(t *testing.T) {
 		testTransactionID: true,
 	}
 
-	testBatcher(t, transactionStates, expectedPayload)
+	testBatcher(t, tm, fwd, transactionStates, expectedPayload)
 
 	batcher.Stop()
 

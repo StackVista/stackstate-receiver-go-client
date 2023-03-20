@@ -5,7 +5,8 @@ import (
 	"sync"
 )
 
-func newTestTransactionManager() *MockTransactionManager {
+// NewMockTransactionManager Create a mock verison of the transaction manager
+func NewMockTransactionManager() *MockTransactionManager {
 	return &MockTransactionManager{TransactionActions: make(chan interface{}, 100)}
 }
 
@@ -44,8 +45,6 @@ func (ttm *MockTransactionManager) Start() {
 
 // Stop resets the singleton init
 func (ttm *MockTransactionManager) Stop() {
-	// reset the transaction manager init
-	tmInit = new(sync.Once)
 }
 
 // StartTransaction sets the current transaction value and updates the notify channel

@@ -199,7 +199,8 @@ func TestForwarder(t *testing.T) {
 				ForwarderRetryMax: 500 * time.Millisecond,
 			}
 
-			fwd := newTransactionalForwarder(client)
+			fwd := NewTransactionalForwarder(client, tm)
+			defer fwd.Stop()
 
 			fwd.SubmitTransactionalIntake(tc.TestTransactionalPayload)
 
@@ -214,7 +215,6 @@ func TestForwarder(t *testing.T) {
 			// reset attempt counter to 0
 			server.Close()
 			atomic.StoreInt32(&attemptCounter, 0)
-			fwd.Stop()
 
 		})
 	}
@@ -240,7 +240,8 @@ func TestForwarder_Multiple(t *testing.T) {
 		ForwarderRetryMax: 500 * time.Millisecond,
 	}
 
-	fwd := newTransactionalForwarder(client)
+	fwd := NewTransactionalForwarder(client, manager)
+	defer fwd.Stop()
 
 	for i := 0; i < 5; i++ {
 		txMap := map[string]transactional.PayloadTransaction{

@@ -8,39 +8,8 @@ import (
 	"time"
 )
 
-var (
-	tmInstance TransactionManager
-	tmInit     *sync.Once
-)
-
-func init() {
-	tmInit = new(sync.Once)
-}
-
-// InitTransactionManager ...
-func InitTransactionManager(transactionChannelBufferSize int, tickerInterval, transactionTimeoutDuration,
-	transactionEvictionDuration time.Duration) {
-	tmInit.Do(func() {
-		tmInstance = newTransactionManager(transactionChannelBufferSize, tickerInterval, transactionTimeoutDuration,
-			transactionEvictionDuration)
-	})
-}
-
-// GetTransactionManager returns a handle on the global transactionbatcher Instance
-func GetTransactionManager() TransactionManager {
-	return tmInstance
-}
-
-// NewMockTransactionManager returns a handle on the global transactionbatcher Instance
-func NewMockTransactionManager() *MockTransactionManager {
-	tmInit.Do(func() {
-		tmInstance = newTestTransactionManager()
-	})
-	return tmInstance.(*MockTransactionManager)
-}
-
-// newTransactionManager returns an instance of a TransactionManager
-func newTransactionManager(transactionChannelBufferSize int, tickerInterval, transactionTimeoutDuration,
+// NewTransactionManager returns an instance of a TransactionManager
+func NewTransactionManager(transactionChannelBufferSize int, tickerInterval, transactionTimeoutDuration,
 	transactionEvictionDuration time.Duration) TransactionManager {
 	tm := &transactionManager{
 		transactionChannel:          make(chan interface{}, transactionChannelBufferSize),
