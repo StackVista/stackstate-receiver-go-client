@@ -13,6 +13,11 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 )
 
+const (
+	DefaultRetryMin = 1 * time.Second
+	DefaultRetryMax = 10 * time.Second
+)
+
 // GET is used for HTTP GET calls
 const GET = "GET"
 
@@ -31,7 +36,7 @@ type HTTPResponse struct {
 
 // ClientHost specifies an host that the client communicates with.
 type ClientHost struct {
-	APIKey string `json:"-"` // never marshal this
+	APIKey  string `json:"-"` // never marshal this
 	HostURL string
 
 	// NoProxy will be set to true when the proxy setting for the trace API endpoint
@@ -40,8 +45,8 @@ type ClientHost struct {
 	ProxyURL          *url.URL
 	SkipSSLValidation bool
 
-	ForwarderRetryMin time.Duration
-	ForwarderRetryMax time.Duration
+	RetryWaitMin time.Duration
+	RetryWaitMax time.Duration
 
 	ContentEncoding ContentEncoding // TODO: make this per request
 }
@@ -104,12 +109,12 @@ func newClient(host *ClientHost) *retryablehttp.Client {
 	// Make retryableClient logging use log level settings by replace the default logger with wrapped leveledLogger
 	retryableClient.Logger = &leveledLogger{}
 	retryableClient.HTTPClient = &http.Client{Timeout: 30 * time.Second, Transport: transport}
-	if host.ForwarderRetryMin.Milliseconds() > 0 {
-		retryableClient.RetryWaitMin = host.ForwarderRetryMin
+	if host.RetryWaitMin.Milliseconds() > 0 {
+		retryableClient.RetryWaitMin = host.RetryWaitMin
 	}
 
-	if host.ForwarderRetryMax.Milliseconds() > 0 {
-		retryableClient.RetryWaitMax = host.ForwarderRetryMax
+	if host.RetryWaitMax.Milliseconds() > 0 {
+		retryableClient.RetryWaitMax = host.RetryWaitMax
 	}
 
 	return retryableClient

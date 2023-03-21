@@ -193,10 +193,10 @@ func TestForwarder(t *testing.T) {
 			server := httpServer(tc.Attempts)
 
 			client := &httpclient.ClientHost{
-				APIKey:            "my-test-api-key",
-				HostURL:           server.URL,
-				ForwarderRetryMin: 100 * time.Millisecond,
-				ForwarderRetryMax: 500 * time.Millisecond,
+				APIKey:       "my-test-api-key",
+				HostURL:      server.URL,
+				RetryWaitMin: 100 * time.Millisecond,
+				RetryWaitMax: 500 * time.Millisecond,
 			}
 
 			fwd := NewTransactionalForwarder(client, tm)
@@ -234,10 +234,10 @@ func TestForwarder_Multiple(t *testing.T) {
 	server := httpServer()
 
 	client := &httpclient.ClientHost{
-		APIKey:            "my-test-api-key",
-		HostURL:           server.URL,
-		ForwarderRetryMin: 100 * time.Millisecond,
-		ForwarderRetryMax: 500 * time.Millisecond,
+		APIKey:       "my-test-api-key",
+		HostURL:      server.URL,
+		RetryWaitMin: 100 * time.Millisecond,
+		RetryWaitMax: 500 * time.Millisecond,
 	}
 
 	fwd := NewTransactionalForwarder(client, manager)
