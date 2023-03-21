@@ -19,6 +19,7 @@ const (
 	// Stale is used to represent a Stale transaction
 	Stale
 
+	// DefaultTxManagerChannelBufferSize is the concurrent transactions before the tx manager begins backpressure
 	DefaultTxManagerChannelBufferSize = 100
 	// DefaultTxManagerTimeoutDurationSeconds is the amount of time before a transaction is marked as stale, 5 minutes by default
 	DefaultTxManagerTimeoutDurationSeconds = 60 * 5
