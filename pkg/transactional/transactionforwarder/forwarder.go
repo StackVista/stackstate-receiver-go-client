@@ -6,7 +6,6 @@ import (
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/transactional/transactionmanager"
 	log "github.com/cihub/seelog"
 	"regexp"
-	"sync"
 )
 
 const apiKeyReplacement = "\"apiKey\":\"*************************$1"
@@ -36,51 +35,16 @@ type Forwarder struct {
 	PayloadChannel  chan TransactionalPayload
 	ShutdownChannel chan ShutdownForwarder
 	logPayloads     bool
+	manager         transactionmanager.TransactionManager
 }
 
-var (
-	transactionalForwarderInstance TransactionalForwarder
-	tfInit                         *sync.Once
-)
-
-func init() {
-	tfInit = new(sync.Once)
-}
-
-// InitTransactionalForwarder initializes the global transactional forwarder Instance
-func InitTransactionalForwarder(host *httpclient.ClientHost) {
-	tfInit.Do(func() {
-		transactionalForwarderInstance = newTransactionalForwarder(host)
-	})
-}
-
-// GetTransactionalForwarder ...
-func GetTransactionalForwarder() TransactionalForwarder {
-	return transactionalForwarderInstance
-}
-
-// NewMockTransactionalForwarder initializes the global TransactionalForwarder with a mock version, intended for testing
-func NewMockTransactionalForwarder() *MockTransactionalForwarder {
-	tfInit.Do(func() {
-		transactionalForwarderInstance = createMockForwarder()
-	})
-	return transactionalForwarderInstance.(*MockTransactionalForwarder)
-}
-
-// NewPrintingTransactionalForwarder initializes the global PrintingTransactionalForwarder used for the agent check command
-func NewPrintingTransactionalForwarder() *PrintingTransactionalForwarder {
-	tfInit.Do(func() {
-		transactionalForwarderInstance = createPrintingForwarder()
-	})
-	return transactionalForwarderInstance.(*PrintingTransactionalForwarder)
-}
-
-// newTransactionalForwarder returns a instance of the forwarder
-func newTransactionalForwarder(host *httpclient.ClientHost) *Forwarder {
+// NewTransactionalForwarder returns a instance of the forwarder
+func NewTransactionalForwarder(host *httpclient.ClientHost, manager transactionmanager.TransactionManager) *Forwarder {
 	fwd := &Forwarder{
 		stsClient:       httpclient.NewStackStateClient(host),
 		PayloadChannel:  make(chan TransactionalPayload, 100),
 		ShutdownChannel: make(chan ShutdownForwarder, 1),
+		manager:         manager,
 	}
 
 	go fwd.Start()
@@ -103,7 +67,7 @@ forwardHandler:
 				for transactionID, payloadTransaction := range payload.TransactionActionMap {
 					log.Debugf("Sending transactional payload failed, rejecting action %s for transaction %s",
 						payloadTransaction.ActionID, transactionID)
-					transactionmanager.GetTransactionManager().RejectAction(transactionID, payloadTransaction.ActionID, response.Err.Error())
+					f.manager.RejectAction(transactionID, payloadTransaction.ActionID, response.Err.Error())
 				}
 				_ = log.Errorf("Sending transactional payload failed, content: %v. %s",
 					apiKeyRegExp.ReplaceAllString(string(payload.Body), apiKeyReplacement), response.Err.Error())
@@ -131,12 +95,12 @@ func (f *Forwarder) ProgressTransactions(transactionMap map[string]transactional
 	for transactionID, payloadTransaction := range transactionMap {
 		log.Debugf("Sent transactional payload successfully, acknowledging action %s for transaction %s",
 			payloadTransaction.ActionID, transactionID)
-		transactionmanager.GetTransactionManager().AcknowledgeAction(transactionID, payloadTransaction.ActionID)
+		f.manager.AcknowledgeAction(transactionID, payloadTransaction.ActionID)
 
 		// if the transaction of the payload is completed, submit a transaction complete
 		if payloadTransaction.CompletedTransaction {
 			log.Debugf("Sent transactional payload successfully, completing transaction %s", transactionID)
-			transactionmanager.GetTransactionManager().CompleteTransaction(transactionID)
+			f.manager.CompleteTransaction(transactionID)
 		}
 	}
 }
@@ -145,9 +109,6 @@ func (f *Forwarder) ProgressTransactions(transactionMap map[string]transactional
 func (f *Forwarder) Stop() {
 	// Shut down the forwardHandler
 	f.ShutdownChannel <- ShutdownForwarder{}
-
-	// reset the forwarder to re-init it later
-	tfInit = new(sync.Once)
 }
 
 // SubmitTransactionalIntake publishes the Payload to the PayloadChannel

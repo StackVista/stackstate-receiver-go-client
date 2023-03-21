@@ -9,42 +9,20 @@ import (
 	"github.com/StackVista/stackstate-receiver-go-client/pkg/transactional/transactionmanager"
 	log "github.com/cihub/seelog"
 	"github.com/google/uuid"
-	"sync"
 )
 
 var (
-	batcherInstance TransactionalBatcher
-	batcherInit     *sync.Once
-
 	DefaultBatcherBufferSize = 10000
 )
 
-func init() {
-	batcherInit = new(sync.Once)
-}
+// NewTransactionalBatcher returns an instance of the transactionalBatcher and starts listening for submissions
+func NewTransactionalBatcher(
+	hostname, agentName string,
+	maxCapacity int,
+	forwarder transactionforwarder.TransactionalForwarder,
+	manager transactionmanager.TransactionManager,
+	logPayloads bool) *transactionalBatcher {
 
-// InitTransactionalBatcher initializes the global transactional transactionbatcher Instance
-func InitTransactionalBatcher(hostname, agentName string, maxCapacity int, logPayloads bool) {
-	batcherInit.Do(func() {
-		batcherInstance = newTransactionalBatcher(hostname, agentName, maxCapacity, logPayloads)
-	})
-}
-
-// GetTransactionalBatcher returns a handle on the global transactionbatcher Instance
-func GetTransactionalBatcher() TransactionalBatcher {
-	return batcherInstance
-}
-
-// NewMockTransactionalBatcher initializes the global transactionbatcher with a mock version, intended for testing
-func NewMockTransactionalBatcher() *MockTransactionalBatcher {
-	batcherInit.Do(func() {
-		batcherInstance = newMockTransactionalBatcher()
-	})
-	return batcherInstance.(*MockTransactionalBatcher)
-}
-
-// newTransactionalBatcher returns an instance of the transactionalBatcher and starts listening for submissions
-func newTransactionalBatcher(hostname, agentName string, maxCapacity int, logPayloads bool) *transactionalBatcher {
 	ctb := &transactionalBatcher{
 		Hostname:    hostname,
 		agentName:   agentName,
@@ -52,6 +30,8 @@ func newTransactionalBatcher(hostname, agentName string, maxCapacity int, logPay
 		builder:     NewTransactionalBatchBuilder(maxCapacity),
 		maxCapacity: maxCapacity,
 		logPayloads: logPayloads,
+		forwarder:   forwarder,
+		manager:     manager,
 	}
 
 	go ctb.Start()
@@ -66,6 +46,8 @@ type transactionalBatcher struct {
 	builder             TransactionBatchBuilder
 	maxCapacity         int
 	logPayloads         bool
+	forwarder           transactionforwarder.TransactionalForwarder
+	manager             transactionmanager.TransactionManager
 }
 
 // Start starts the transactional transactionbatcher
@@ -113,9 +95,6 @@ BatcherReceiver:
 // Stop stops the transactional transactionbatcher
 func (ctb *transactionalBatcher) Stop() {
 	ctb.Input <- SubmitShutdown{}
-
-	// reset the batcher init to re-init the batcher
-	batcherInit = new(sync.Once)
 }
 
 // SubmitState submits the transactional check instance batch state and commits an action for this payload
@@ -126,7 +105,7 @@ func (ctb *transactionalBatcher) SubmitState(states TransactionCheckInstanceBatc
 		if err != nil {
 			// discard all the transactions in the transactionbatcher states
 			for _, state := range states {
-				transactionmanager.GetTransactionManager().DiscardTransaction(state.Transaction.TransactionID, fmt.Sprintf("Marshall error in payload: %v", data))
+				ctb.manager.DiscardTransaction(state.Transaction.TransactionID, fmt.Sprintf("Marshall error in payload: %v", data))
 			}
 		}
 
@@ -162,7 +141,7 @@ func (ctb *transactionalBatcher) SubmitState(states TransactionCheckInstanceBatc
 				CompletedTransaction: state.Transaction.CompletedTransaction,
 			}
 			// commit an action for each of the transactions in this transactionbatcher state
-			transactionmanager.GetTransactionManager().CommitAction(state.Transaction.TransactionID, actionID)
+			ctb.manager.CommitAction(state.Transaction.TransactionID, actionID)
 		}
 
 		log.Debugf("Marshalled payload for transactions: %v, payload: %s", transactionPayloadMap, string(payload))
@@ -173,7 +152,7 @@ func (ctb *transactionalBatcher) SubmitState(states TransactionCheckInstanceBatc
 
 // submitPayload submits the payload to the forwarder
 func (ctb *transactionalBatcher) submitPayload(payload []byte, transactionPayloadMap map[string]transactional.PayloadTransaction) {
-	transactionforwarder.GetTransactionalForwarder().SubmitTransactionalIntake(transactionforwarder.TransactionalPayload{
+	ctb.forwarder.SubmitTransactionalIntake(transactionforwarder.TransactionalPayload{
 		Body:                 payload,
 		Path:                 transactional.IntakePath,
 		TransactionActionMap: transactionPayloadMap,

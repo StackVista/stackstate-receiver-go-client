@@ -8,13 +8,14 @@ import (
 	"github.com/fatih/color"
 )
 
-func createPrintingForwarder() *PrintingTransactionalForwarder {
-	return &PrintingTransactionalForwarder{PayloadChan: make(chan TransactionalPayload, 100)}
+func NewPrintingTransactionalForwarder(manager transactionmanager.TransactionManager) *PrintingTransactionalForwarder {
+	return &PrintingTransactionalForwarder{PayloadChan: make(chan TransactionalPayload, 100), manager: manager}
 }
 
 // PrintingTransactionalForwarder is a implementation of the transactional forwarder that prints the payload
 type PrintingTransactionalForwarder struct {
 	PayloadChan chan TransactionalPayload
+	manager     transactionmanager.TransactionManager
 }
 
 // Start is a noop
@@ -25,11 +26,11 @@ func (mf *PrintingTransactionalForwarder) SubmitTransactionalIntake(payload Tran
 
 	// Acknowledge actions and succeed transactions
 	for transactionID, payloadTransaction := range payload.TransactionActionMap {
-		transactionmanager.GetTransactionManager().AcknowledgeAction(transactionID, payloadTransaction.ActionID)
+		mf.manager.AcknowledgeAction(transactionID, payloadTransaction.ActionID)
 
 		// if the transaction of the payload is completed, submit a transaction complete
 		if payloadTransaction.CompletedTransaction {
-			transactionmanager.GetTransactionManager().CompleteTransaction(transactionID)
+			mf.manager.CompleteTransaction(transactionID)
 		}
 	}
 

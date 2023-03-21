@@ -8,39 +8,19 @@ import (
 	"time"
 )
 
-var (
-	tmInstance TransactionManager
-	tmInit     *sync.Once
+const (
+	// DefaultTxManagerChannelBufferSize is the concurrent transactions before the tx manager begins backpressure
+	DefaultTxManagerChannelBufferSize = 100
+	// DefaultTxManagerTimeoutDurationSeconds is the amount of time before a transaction is marked as stale, 5 minutes by default
+	DefaultTxManagerTimeoutDurationSeconds = 60 * 5
+	// DefaultTxManagerEvictionDurationSeconds is the amount of time before a transaction is evicted and rolled back, 10 minutes by default
+	DefaultTxManagerEvictionDurationSeconds = 60 * 10
+	// DefaultTxManagerTickerIntervalSeconds is the ticker interval to mark transactions as stale / timeout.
+	DefaultTxManagerTickerIntervalSeconds = 30
 )
 
-func init() {
-	tmInit = new(sync.Once)
-}
-
-// InitTransactionManager ...
-func InitTransactionManager(transactionChannelBufferSize int, tickerInterval, transactionTimeoutDuration,
-	transactionEvictionDuration time.Duration) {
-	tmInit.Do(func() {
-		tmInstance = newTransactionManager(transactionChannelBufferSize, tickerInterval, transactionTimeoutDuration,
-			transactionEvictionDuration)
-	})
-}
-
-// GetTransactionManager returns a handle on the global transactionbatcher Instance
-func GetTransactionManager() TransactionManager {
-	return tmInstance
-}
-
-// NewMockTransactionManager returns a handle on the global transactionbatcher Instance
-func NewMockTransactionManager() *MockTransactionManager {
-	tmInit.Do(func() {
-		tmInstance = newTestTransactionManager()
-	})
-	return tmInstance.(*MockTransactionManager)
-}
-
-// newTransactionManager returns an instance of a TransactionManager
-func newTransactionManager(transactionChannelBufferSize int, tickerInterval, transactionTimeoutDuration,
+// NewTransactionManager returns an instance of a TransactionManager
+func NewTransactionManager(transactionChannelBufferSize int, tickerInterval, transactionTimeoutDuration,
 	transactionEvictionDuration time.Duration) TransactionManager {
 	tm := &transactionManager{
 		transactionChannel:          make(chan interface{}, transactionChannelBufferSize),

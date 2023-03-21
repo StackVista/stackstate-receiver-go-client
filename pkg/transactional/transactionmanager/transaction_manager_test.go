@@ -9,7 +9,7 @@ import (
 )
 
 func TestTransactionManager_HappyFlow(t *testing.T) {
-	txManager := newTransactionManager(100, 100*time.Millisecond, 500*time.Millisecond,
+	txManager := NewTransactionManager(100, 100*time.Millisecond, 500*time.Millisecond,
 		500*time.Millisecond).(*transactionManager)
 
 	// assert that we're starting on a clean slate
@@ -55,7 +55,7 @@ func TestTransactionManager_HappyFlow(t *testing.T) {
 }
 
 func TestTransactionManager_SetState(t *testing.T) {
-	txManager := newTransactionManager(100, 250*time.Millisecond, 500*time.Millisecond,
+	txManager := NewTransactionManager(100, 250*time.Millisecond, 500*time.Millisecond,
 		500*time.Millisecond).(*transactionManager)
 
 	// assert that we're starting on a clean slate
@@ -94,7 +94,7 @@ func TestTransactionManager_SetState(t *testing.T) {
 }
 
 func TestTransactionManager_TransactionDiscard(t *testing.T) {
-	txManager := newTransactionManager(100, 100*time.Millisecond, 1*time.Second,
+	txManager := NewTransactionManager(100, 100*time.Millisecond, 1*time.Second,
 		1*time.Second).(*transactionManager)
 
 	txNotifyChannel := make(chan interface{})
@@ -167,7 +167,7 @@ func TestTransactionManager_TransactionDiscard(t *testing.T) {
 
 func TestTransactionManager_TransactionTimeout(t *testing.T) {
 	staleTimeout := 100 * time.Millisecond
-	txManager := newTransactionManager(100, 10*time.Millisecond, staleTimeout,
+	txManager := NewTransactionManager(100, 10*time.Millisecond, staleTimeout,
 		750*time.Millisecond).(*transactionManager)
 
 	txNotifyChannel := make(chan interface{})
@@ -227,7 +227,7 @@ func TestTransactionManager_TransactionTimeout(t *testing.T) {
 }
 
 func TestTransactionManager_ErrorHandling(t *testing.T) {
-	txManager := newTransactionManager(100, 100*time.Millisecond, 1*time.Second,
+	txManager := NewTransactionManager(100, 100*time.Millisecond, 1*time.Second,
 		1*time.Second).(*transactionManager)
 
 	txNotifyChannel := make(chan interface{})
@@ -285,7 +285,7 @@ func TestTransactionManager_ErrorHandling(t *testing.T) {
 }
 
 func TestTransactionCompleted(t *testing.T) {
-	txManager := newTransactionManager(100, 250*time.Millisecond, 1*time.Second,
+	txManager := NewTransactionManager(100, 250*time.Millisecond, 1*time.Second,
 		1*time.Second).(*transactionManager)
 
 	txNotifyChannel := make(chan interface{})

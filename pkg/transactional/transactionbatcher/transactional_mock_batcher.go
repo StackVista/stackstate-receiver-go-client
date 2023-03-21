@@ -14,7 +14,8 @@ type MockTransactionalBatcher struct {
 	mux               sync.Mutex
 }
 
-func newMockTransactionalBatcher() *MockTransactionalBatcher {
+// NewMockTransactionalBatcher creates a mock instance of the transactional batcher
+func NewMockTransactionalBatcher() *MockTransactionalBatcher {
 	return &MockTransactionalBatcher{
 		CollectedTopology: NewTransactionalBatchBuilder(1000),
 	}
@@ -123,6 +124,4 @@ func (mtb *MockTransactionalBatcher) SubmitClearState(checkID check.CheckID) {
 
 // Stop shuts down the transactionbatcher and resets the singleton init
 func (mtb *MockTransactionalBatcher) Stop() {
-	// reset the tmInit to re-init the batcher
-	batcherInit = new(sync.Once)
 }
