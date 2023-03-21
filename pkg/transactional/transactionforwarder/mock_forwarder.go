@@ -1,5 +1,6 @@
 package transactionforwarder
 
+// NewMockTransactionalForwarder returns a new instance of the MockTransactionalForwarder
 func NewMockTransactionalForwarder() *MockTransactionalForwarder {
 	return &MockTransactionalForwarder{PayloadChan: make(chan TransactionalPayload, 100)}
 }
