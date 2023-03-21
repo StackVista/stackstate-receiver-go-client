@@ -72,7 +72,7 @@ type StackStateClient struct {
 }
 
 // NewStackStateClient returns a RetryableHTTPClient containing a http.Client configured with the Agent options.
-func NewStackStateClient(host *ClientHost) RetryableHTTPClient {
+func NewStackStateClient(host *ClientHost) *StackStateClient {
 	return &StackStateClient{NewHTTPClient(host)}
 }
 

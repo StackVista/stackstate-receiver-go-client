@@ -31,7 +31,7 @@ type TransactionalForwarder interface {
 
 // Forwarder is a forwarder that works in transactional manner
 type Forwarder struct {
-	stsClient       httpclient.RetryableHTTPClient
+	stsClient       *httpclient.StackStateClient
 	PayloadChannel  chan TransactionalPayload
 	ShutdownChannel chan ShutdownForwarder
 	logPayloads     bool
@@ -39,9 +39,9 @@ type Forwarder struct {
 }
 
 // NewTransactionalForwarder returns a instance of the forwarder
-func NewTransactionalForwarder(host *httpclient.ClientHost, manager transactionmanager.TransactionManager) *Forwarder {
+func NewTransactionalForwarder(client *httpclient.StackStateClient, manager transactionmanager.TransactionManager) *Forwarder {
 	fwd := &Forwarder{
-		stsClient:       httpclient.NewStackStateClient(host),
+		stsClient:       client,
 		PayloadChannel:  make(chan TransactionalPayload, 100),
 		ShutdownChannel: make(chan ShutdownForwarder, 1),
 		manager:         manager,
