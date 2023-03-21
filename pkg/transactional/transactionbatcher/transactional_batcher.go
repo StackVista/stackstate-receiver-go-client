@@ -17,7 +17,7 @@ var (
 
 // NewTransactionalBatcher returns an instance of the transactionalBatcher and starts listening for submissions
 func NewTransactionalBatcher(
-	hostname, agentName string,
+	hostname string,
 	maxCapacity int,
 	forwarder transactionforwarder.TransactionalForwarder,
 	manager transactionmanager.TransactionManager,
@@ -25,7 +25,6 @@ func NewTransactionalBatcher(
 
 	ctb := &transactionalBatcher{
 		Hostname:    hostname,
-		agentName:   agentName,
 		Input:       make(chan interface{}, maxCapacity),
 		builder:     NewTransactionalBatchBuilder(maxCapacity),
 		maxCapacity: maxCapacity,
@@ -41,13 +40,13 @@ func NewTransactionalBatcher(
 
 // transactionalBatcher is a instance of a transactionbatcher for a specific check instance
 type transactionalBatcher struct {
-	Hostname, agentName string
-	Input               chan interface{}
-	builder             TransactionBatchBuilder
-	maxCapacity         int
-	logPayloads         bool
-	forwarder           transactionforwarder.TransactionalForwarder
-	manager             transactionmanager.TransactionManager
+	Hostname    string
+	Input       chan interface{}
+	builder     TransactionBatchBuilder
+	maxCapacity int
+	logPayloads bool
+	forwarder   transactionforwarder.TransactionalForwarder
+	manager     transactionmanager.TransactionManager
 }
 
 // Start starts the transactional transactionbatcher
