@@ -12,6 +12,7 @@ import (
 )
 
 var (
+	// DefaultBatcherBufferSize is the default buffer size for the transactionbatcher
 	DefaultBatcherBufferSize = 10000
 )
 
