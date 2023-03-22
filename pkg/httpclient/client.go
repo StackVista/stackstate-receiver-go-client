@@ -58,6 +58,7 @@ type RetryableHTTPClient interface {
 	Get(path string) *HTTPResponse
 	Put(path string, body []byte) *HTTPResponse
 	Post(path string, body []byte) *HTTPResponse
+	GetClient() *http.Client
 }
 
 // RetryableHTTPClient creates a http client to communicate to StackState
@@ -73,7 +74,7 @@ type StackStateClient struct {
 }
 
 // NewStackStateClient returns a RetryableHTTPClient containing a http.Client configured with the Agent options.
-func NewStackStateClient(host *ClientHost) RetryableHTTPClient {
+func NewStackStateClient(host *ClientHost) *StackStateClient {
 	return &StackStateClient{NewHTTPClient(host)}
 }
 
@@ -137,7 +138,11 @@ func (rc *retryableHTTPClient) Post(path string, body []byte) *HTTPResponse {
 	return rc.handleRequest(POST, path, body)
 }
 
-// getSupportedFeatures returns the features supported by the StackState API
+// GetClient returns the underlying http client
+func (rc *retryableHTTPClient) GetClient() *http.Client {
+	return rc.HTTPClient
+}
+
 func (rc *retryableHTTPClient) handleRequest(method, path string, body []byte) *HTTPResponse {
 
 	req, err := rc.makeRequest(method, path, body)
