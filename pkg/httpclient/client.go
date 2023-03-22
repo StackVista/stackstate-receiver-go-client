@@ -14,7 +14,9 @@ import (
 )
 
 const (
+	// DefaultRetryMin is the default minimum retry time
 	DefaultRetryMin = 1 * time.Second
+	// DefaultRetryMax is the default maximum retry time
 	DefaultRetryMax = 10 * time.Second
 )
 

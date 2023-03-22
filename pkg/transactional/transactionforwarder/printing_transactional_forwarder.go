@@ -8,6 +8,7 @@ import (
 	"github.com/fatih/color"
 )
 
+// NewPrintingTransactionalForwarder returns a new instance of the PrintingTransactionalForwarder
 func NewPrintingTransactionalForwarder(manager transactionmanager.TransactionManager) *PrintingTransactionalForwarder {
 	return &PrintingTransactionalForwarder{PayloadChan: make(chan TransactionalPayload, 100), manager: manager}
 }
