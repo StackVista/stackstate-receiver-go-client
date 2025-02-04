@@ -24,9 +24,9 @@ func (c CheckData) MarshalJSON() ([]byte, error) {
 		return json.Marshal(c.CheckState)
 	} else if c.CheckStateDeleted != nil {
 		return json.Marshal(c.CheckStateDeleted)
-	} else {
-		return json.Marshal(c.Unstructured)
 	}
+
+	return json.Marshal(c.Unstructured)
 }
 
 // IsEmpty checks if the data is empty (can come from Python check)

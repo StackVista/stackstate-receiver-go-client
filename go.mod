@@ -8,6 +8,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-retryablehttp v0.7.1
 	github.com/stretchr/testify v1.7.0
+	golang.org/x/oauth2 v0.19.0
 )
 
 require (

@@ -1,0 +1,1060 @@
+openapi: 3.0.3
+info:
+  contact:
+    email: info@stackstate.com
+    name: StackState
+    url: https://stackstate.com
+  description: |
+    This API documentation page describes the SUSE Observability receiver API.
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  title: SUSE Observability Receiver API
+  version: 5.2.0
+  x-logo:
+    url: https://raw.githubusercontent.com/StackVista/stackstate-docs/master/resources/logo/StackState-Color-padding.png
+    href: '#top'
+servers:
+- url: /
+paths:
+  /stsAgent/rbac/instance:
+    post:
+      description: Ingest RBAC data snapshots to build a scoped authorization model
+        for data access for the server API
+      operationId: ingestInstanceRBAC
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RBACRequest'
+        required: true
+      responses:
+        "201":
+          description: RBAC Data accepted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorsResponse'
+          description: Error when handling the request on the server side.
+      summary: Create instance RBAC objects
+      tags:
+      - receiverRbacInstance
+  /stsAgent/rbac/scope:
+    post:
+      description: Ingest RBAC data snapshots to build a scoped authorization model
+        for data access for the server API
+      operationId: ingestScopeRBAC
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RBACRequest'
+        required: true
+      responses:
+        "201":
+          description: RBAC Data accepted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorsResponse'
+          description: Error when handling the request on the server side.
+      summary: Create scope RBAC objects
+      tags:
+      - receiverRbacScope
+components:
+  responses:
+    genericErrorsResponse:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GenericErrorsResponse'
+      description: Error when handling the request on the server side.
+  schemas:
+    RBACRequest:
+      description: RBACRequest holds the data needed to create or update RBAC objects
+      discriminator:
+        propertyName: _type
+      oneOf:
+      - $ref: '#/components/schemas/RBACSnapshotRequest'
+      - $ref: '#/components/schemas/RBACIncrementRequest'
+      required:
+      - _type
+    RBACSnapshotRequest:
+      description: RBACSnapshotRequest holds a complete or partial snapshot of RBAC
+        data
+      example:
+        collection_timestamp: 0
+        sequence: 6
+        cluster: cluster
+        stop_snapshot: "{}"
+        rbac_data:
+        - metadata:
+            generation: 5
+            finalizers:
+            - finalizers
+            - finalizers
+            resourceVersion: resourceVersion
+            annotations:
+              key: annotations
+            generateName: generateName
+            deletionTimestamp: 2000-01-23T04:56:07.000+00:00
+            labels:
+              key: labels
+            ownerReferences:
+            - uid: uid
+              controller: true
+              kind: kind
+              name: name
+              blockOwnerDeletion: true
+            - uid: uid
+              controller: true
+              kind: kind
+              name: name
+              blockOwnerDeletion: true
+            deletionGracePeriodSeconds: 5
+            uid: uid
+            managedFields:
+            - apiVersion: apiVersion
+              manager: manager
+              subresource: subresource
+              time: 2000-01-23T04:56:07.000+00:00
+              operation: operation
+              fieldsType: fieldsType
+            - apiVersion: apiVersion
+              manager: manager
+              subresource: subresource
+              time: 2000-01-23T04:56:07.000+00:00
+              operation: operation
+              fieldsType: fieldsType
+            name: name
+            creationTimestamp: 2000-01-23T04:56:07.000+00:00
+            namespace: namespace
+          aggregationRule:
+            clusterRoleSelectors:
+            - matchExpressions:
+              - values:
+                - values
+                - values
+                key: key
+                operator: operator
+              - values:
+                - values
+                - values
+                key: key
+                operator: operator
+              matchLabels:
+                key: matchLabels
+            - matchExpressions:
+              - values:
+                - values
+                - values
+                key: key
+                operator: operator
+              - values:
+                - values
+                - values
+                key: key
+                operator: operator
+              matchLabels:
+                key: matchLabels
+          kind: kind
+          rules:
+          - resourceNames:
+            - resourceNames
+            - resourceNames
+            resources:
+            - resources
+            - resources
+            verbs:
+            - verbs
+            - verbs
+            apiGroups:
+            - apiGroups
+            - apiGroups
+            nonResourceURLs:
+            - nonResourceURLs
+            - nonResourceURLs
+          - resourceNames:
+            - resourceNames
+            - resourceNames
+            resources:
+            - resources
+            - resources
+            verbs:
+            - verbs
+            - verbs
+            apiGroups:
+            - apiGroups
+            - apiGroups
+            nonResourceURLs:
+            - nonResourceURLs
+            - nonResourceURLs
+        - metadata:
+            generation: 5
+            finalizers:
+            - finalizers
+            - finalizers
+            resourceVersion: resourceVersion
+            annotations:
+              key: annotations
+            generateName: generateName
+            deletionTimestamp: 2000-01-23T04:56:07.000+00:00
+            labels:
+              key: labels
+            ownerReferences:
+            - uid: uid
+              controller: true
+              kind: kind
+              name: name
+              blockOwnerDeletion: true
+            - uid: uid
+              controller: true
+              kind: kind
+              name: name
+              blockOwnerDeletion: true
+            deletionGracePeriodSeconds: 5
+            uid: uid
+            managedFields:
+            - apiVersion: apiVersion
+              manager: manager
+              subresource: subresource
+              time: 2000-01-23T04:56:07.000+00:00
+              operation: operation
+              fieldsType: fieldsType
+            - apiVersion: apiVersion
+              manager: manager
+              subresource: subresource
+              time: 2000-01-23T04:56:07.000+00:00
+              operation: operation
+              fieldsType: fieldsType
+            name: name
+            creationTimestamp: 2000-01-23T04:56:07.000+00:00
+            namespace: namespace
+          aggregationRule:
+            clusterRoleSelectors:
+            - matchExpressions:
+              - values:
+                - values
+                - values
+                key: key
+                operator: operator
+              - values:
+                - values
+                - values
+                key: key
+                operator: operator
+              matchLabels:
+                key: matchLabels
+            - matchExpressions:
+              - values:
+                - values
+                - values
+                key: key
+                operator: operator
+              - values:
+                - values
+                - values
+                key: key
+                operator: operator
+              matchLabels:
+                key: matchLabels
+          kind: kind
+          rules:
+          - resourceNames:
+            - resourceNames
+            - resourceNames
+            resources:
+            - resources
+            - resources
+            verbs:
+            - verbs
+            - verbs
+            apiGroups:
+            - apiGroups
+            - apiGroups
+            nonResourceURLs:
+            - nonResourceURLs
+            - nonResourceURLs
+          - resourceNames:
+            - resourceNames
+            - resourceNames
+            resources:
+            - resources
+            - resources
+            verbs:
+            - verbs
+            - verbs
+            apiGroups:
+            - apiGroups
+            - apiGroups
+            nonResourceURLs:
+            - nonResourceURLs
+            - nonResourceURLs
+        _type: RBACSnapshotRequest
+        start_snapshot:
+          repeat_interval_s: 1
+      properties:
+        _type:
+          enum:
+          - RBACSnapshotRequest
+          type: string
+        collection_timestamp:
+          description: Timestamp where the data was collected by the RBAC Agent
+          format: int64
+          type: integer
+        sequence:
+          description: Incremental number for snapshot batches. Helpful to detect
+            incomplete snapshots that could lead to incorrect conclusions.
+          type: integer
+        cluster:
+          description: Cluster name which identifies the scope of the RBAC data
+          type: string
+        start_snapshot:
+          $ref: '#/components/schemas/StartSnapshot'
+        stop_snapshot:
+          description: Object that signals that an open Snapshot needs to be closed
+            after ingesting the RBAC data
+          type: object
+        rbac_data:
+          items:
+            $ref: '#/components/schemas/RbacData'
+          type: array
+      required:
+      - _type
+      - cluster
+      - collection_timestamp
+      - rbac_data
+      - sequence
+      type: object
+    StartSnapshot:
+      description: Object that signals that the RBAC data belongs to a new Snapshot
+      example:
+        repeat_interval_s: 1
+      properties:
+        repeat_interval_s:
+          description: Number of seconds when the RBAC Agent will send the following
+            snapshot. Heartbeat of the Agent
+          format: int64
+          type: integer
+      type: object
+    StopSnapshot:
+      description: Object that signals that an open Snapshot needs to be closed after
+        ingesting the RBAC data
+      type: object
+    RbacData:
+      discriminator:
+        propertyName: kind
+      oneOf:
+      - $ref: '#/components/schemas/ClusterRole'
+      - $ref: '#/components/schemas/Role'
+      - $ref: '#/components/schemas/ClusterRoleBinding'
+      - $ref: '#/components/schemas/RoleBinding'
+      required:
+      - kind
+    ClusterRole:
+      description: "ClusterRole is a cluster level, logical grouping of PolicyRules\
+        \ that can be referenced as a unit by a RoleBinding or ClusterRoleBinding."
+      example:
+        metadata:
+          generation: 5
+          finalizers:
+          - finalizers
+          - finalizers
+          resourceVersion: resourceVersion
+          annotations:
+            key: annotations
+          generateName: generateName
+          deletionTimestamp: 2000-01-23T04:56:07.000+00:00
+          labels:
+            key: labels
+          ownerReferences:
+          - uid: uid
+            controller: true
+            kind: kind
+            name: name
+            blockOwnerDeletion: true
+          - uid: uid
+            controller: true
+            kind: kind
+            name: name
+            blockOwnerDeletion: true
+          deletionGracePeriodSeconds: 5
+          uid: uid
+          managedFields:
+          - apiVersion: apiVersion
+            manager: manager
+            subresource: subresource
+            time: 2000-01-23T04:56:07.000+00:00
+            operation: operation
+            fieldsType: fieldsType
+          - apiVersion: apiVersion
+            manager: manager
+            subresource: subresource
+            time: 2000-01-23T04:56:07.000+00:00
+            operation: operation
+            fieldsType: fieldsType
+          name: name
+          creationTimestamp: 2000-01-23T04:56:07.000+00:00
+          namespace: namespace
+        aggregationRule:
+          clusterRoleSelectors:
+          - matchExpressions:
+            - values:
+              - values
+              - values
+              key: key
+              operator: operator
+            - values:
+              - values
+              - values
+              key: key
+              operator: operator
+            matchLabels:
+              key: matchLabels
+          - matchExpressions:
+            - values:
+              - values
+              - values
+              key: key
+              operator: operator
+            - values:
+              - values
+              - values
+              key: key
+              operator: operator
+            matchLabels:
+              key: matchLabels
+        kind: kind
+        rules:
+        - resourceNames:
+          - resourceNames
+          - resourceNames
+          resources:
+          - resources
+          - resources
+          verbs:
+          - verbs
+          - verbs
+          apiGroups:
+          - apiGroups
+          - apiGroups
+          nonResourceURLs:
+          - nonResourceURLs
+          - nonResourceURLs
+        - resourceNames:
+          - resourceNames
+          - resourceNames
+          resources:
+          - resources
+          - resources
+          verbs:
+          - verbs
+          - verbs
+          apiGroups:
+          - apiGroups
+          - apiGroups
+          nonResourceURLs:
+          - nonResourceURLs
+          - nonResourceURLs
+      properties:
+        kind:
+          description: Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated.
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ObjectMeta'
+        aggregationRule:
+          $ref: '#/components/schemas/AggregationRule'
+        rules:
+          description: Rules holds all the PolicyRules for this ClusterRole.
+          items:
+            $ref: '#/components/schemas/PolicyRule'
+          type: array
+      required:
+      - kind
+      - metadata
+      type: object
+    ObjectMeta:
+      description: "ObjectMeta is metadata that all persisted resources must have,\
+        \ which includes all objects users must create."
+      example:
+        generation: 5
+        finalizers:
+        - finalizers
+        - finalizers
+        resourceVersion: resourceVersion
+        annotations:
+          key: annotations
+        generateName: generateName
+        deletionTimestamp: 2000-01-23T04:56:07.000+00:00
+        labels:
+          key: labels
+        ownerReferences:
+        - uid: uid
+          controller: true
+          kind: kind
+          name: name
+          blockOwnerDeletion: true
+        - uid: uid
+          controller: true
+          kind: kind
+          name: name
+          blockOwnerDeletion: true
+        deletionGracePeriodSeconds: 5
+        uid: uid
+        managedFields:
+        - apiVersion: apiVersion
+          manager: manager
+          subresource: subresource
+          time: 2000-01-23T04:56:07.000+00:00
+          operation: operation
+          fieldsType: fieldsType
+        - apiVersion: apiVersion
+          manager: manager
+          subresource: subresource
+          time: 2000-01-23T04:56:07.000+00:00
+          operation: operation
+          fieldsType: fieldsType
+        name: name
+        creationTimestamp: 2000-01-23T04:56:07.000+00:00
+        namespace: namespace
+      properties:
+        uid:
+          description: Unique identifier for this object. Populated by the system.
+          type: string
+        name:
+          description: Unique name within a namespace. Required for resource creation.
+          type: string
+        annotations:
+          additionalProperties:
+            type: string
+          description: "Annotations is an unstructured key-value map stored with a\
+            \ resource that may be set by external tools. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations"
+          type: object
+        creationTimestamp:
+          description: Time is a wrapper around time.Time which supports correct marshaling
+            to YAML and JSON.
+          format: date-time
+          type: string
+        deletionGracePeriodSeconds:
+          description: Number of seconds allowed for this object to gracefully terminate
+            before removal.
+          format: int64
+          type: integer
+        deletionTimestamp:
+          description: Time is a wrapper around time.Time which supports correct marshaling
+            to YAML and JSON.
+          format: date-time
+          type: string
+        finalizers:
+          description: Must be empty before deletion.
+          items:
+            type: string
+          type: array
+        generateName:
+          description: Optional prefix for generating a unique name.
+          type: string
+        generation:
+          description: A sequence number representing a specific generation of the
+            desired state.
+          format: int64
+          type: integer
+        labels:
+          additionalProperties:
+            type: string
+          description: Map of string keys and values used to organize and categorize
+            objects.
+          type: object
+        managedFields:
+          description: Maps workflow-id and version to the set of fields managed by
+            that workflow.
+          items:
+            $ref: '#/components/schemas/ManagedFieldsEntry'
+          type: array
+        namespace:
+          description: Defines the space within which each name must be unique.
+          type: string
+        ownerReferences:
+          description: List of objects depended by this object.
+          items:
+            $ref: '#/components/schemas/OwnerReference'
+          type: array
+        resourceVersion:
+          description: Opaque value representing the internal version of this object.
+          type: string
+      required:
+      - name
+      - uid
+      type: object
+    Time:
+      description: Time is a wrapper around time.Time which supports correct marshaling
+        to YAML and JSON.
+      format: date-time
+      type: string
+    ManagedFieldsEntry:
+      description: "ManagedFieldsEntry is a workflow-id, a FieldSet and the group\
+        \ version of the resource that the fieldset applies to."
+      example:
+        apiVersion: apiVersion
+        manager: manager
+        subresource: subresource
+        time: 2000-01-23T04:56:07.000+00:00
+        operation: operation
+        fieldsType: fieldsType
+      properties:
+        apiVersion:
+          description: APIVersion defines the version of this resource that this field
+            set applies to. The format is "group/version" just like the top-level
+            APIVersion field. It is necessary to track the version of a field set
+            because it cannot be automatically converted.
+          type: string
+        fieldsType:
+          description: "FieldsType is the discriminator for the different fields format\
+            \ and version. There is currently only one possible value: \"FieldsV1\""
+          type: string
+        manager:
+          description: Manager is an identifier of the workflow managing these fields.
+          type: string
+        operation:
+          description: Operation is the type of operation which lead to this ManagedFieldsEntry
+            being created. The only valid values for this field are 'Apply' and 'Update'.
+          type: string
+        subresource:
+          description: "Subresource is the name of the subresource used to update\
+            \ that object, or empty string if the object was updated through the main\
+            \ resource. The value of this field is used to distinguish between managers,\
+            \ even if they share the same name. For example, a status update will\
+            \ be distinct from a regular update using the same manager name. Note\
+            \ that the APIVersion field is not related to the Subresource field and\
+            \ it always corresponds to the version of the main resource."
+          type: string
+        time:
+          description: Time is a wrapper around time.Time which supports correct marshaling
+            to YAML and JSON.
+          format: date-time
+          type: string
+      type: object
+    OwnerReference:
+      description: "OwnerReference contains enough information to let you identify\
+        \ an owning object. An owning object must be in the same namespace as the\
+        \ dependent, or be cluster-scoped, so there is no namespace field."
+      example:
+        uid: uid
+        controller: true
+        kind: kind
+        name: name
+        blockOwnerDeletion: true
+      properties:
+        uid:
+          description: UID of the referent.
+          type: string
+        name:
+          description: Name of the referent.
+          type: string
+        kind:
+          description: Kind of the referent.
+          type: string
+        blockOwnerDeletion:
+          description: "If true, AND if the owner has the 'foregroundDeletion' finalizer,\
+            \ then the owner cannot be deleted from the key-value store until this\
+            \ reference is removed."
+          type: boolean
+        controller:
+          description: "If true, this reference points to the managing controller."
+          type: boolean
+      required:
+      - kind
+      - name
+      - uid
+      type: object
+    AggregationRule:
+      description: AggregationRule describes how to locate ClusterRoles to aggregate
+        into the ClusterRole.
+      example:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - values:
+            - values
+            - values
+            key: key
+            operator: operator
+          - values:
+            - values
+            - values
+            key: key
+            operator: operator
+          matchLabels:
+            key: matchLabels
+        - matchExpressions:
+          - values:
+            - values
+            - values
+            key: key
+            operator: operator
+          - values:
+            - values
+            - values
+            key: key
+            operator: operator
+          matchLabels:
+            key: matchLabels
+      properties:
+        clusterRoleSelectors:
+          description: "ClusterRoleSelectors holds a list of selectors which will\
+            \ be used to find ClusterRoles and create the rules. If any of the selectors\
+            \ match, then the ClusterRole's permissions will be added."
+          items:
+            $ref: '#/components/schemas/LabelSelector'
+          type: array
+      type: object
+    LabelSelector:
+      description: A label selector is a label query over a set of resources. The
+        result of matchLabels and matchExpressions are ANDed. An empty label selector
+        matches all objects. A null label selector matches no objects.
+      example:
+        matchExpressions:
+        - values:
+          - values
+          - values
+          key: key
+          operator: operator
+        - values:
+          - values
+          - values
+          key: key
+          operator: operator
+        matchLabels:
+          key: matchLabels
+      properties:
+        matchExpressions:
+          description: matchExpressions is a list of label selector requirements.
+            The requirements are ANDed.
+          items:
+            $ref: '#/components/schemas/LabelSelectorRequirement'
+          type: array
+        matchLabels:
+          additionalProperties:
+            type: string
+          description: "matchLabels is a map of {key,value} pairs. A single {key,value}\
+            \ in the matchLabels map is equivalent to an element of matchExpressions,\
+            \ whose key field is 'key', the operator is 'In', and the values array\
+            \ contains only 'value'. The requirements are ANDed."
+          type: object
+      type: object
+    LabelSelectorRequirement:
+      description: "A label selector requirement is a selector that contains values,\
+        \ a key, and an operator that relates the key and values."
+      example:
+        values:
+        - values
+        - values
+        key: key
+        operator: operator
+      properties:
+        key:
+          description: key is the label key that the selector applies to.
+          type: string
+        operator:
+          description: "operator represents a key's relationship to a set of values.\
+            \ Valid operators are In, NotIn, Exists and DoesNotExist."
+          type: string
+        values:
+          description: "values is an array of string values. If the operator is In\
+            \ or NotIn, the values array must be non-empty. If the operator is Exists\
+            \ or DoesNotExist, the values array must be empty. This array is replaced\
+            \ during a strategic merge patch."
+          items:
+            type: string
+          type: array
+      required:
+      - key
+      - operator
+      type: object
+    PolicyRule:
+      description: PolicyRule holds information that describes a policy rule.
+      example:
+        resourceNames:
+        - resourceNames
+        - resourceNames
+        resources:
+        - resources
+        - resources
+        verbs:
+        - verbs
+        - verbs
+        apiGroups:
+        - apiGroups
+        - apiGroups
+        nonResourceURLs:
+        - nonResourceURLs
+        - nonResourceURLs
+      properties:
+        apiGroups:
+          description: APIGroups is the name of the APIGroup that contains the resources.
+          items:
+            type: string
+          type: array
+        nonResourceURLs:
+          description: NonResourceURLs is a set of partial URLs that a user should
+            have access to.
+          items:
+            type: string
+          type: array
+        resourceNames:
+          description: ResourceNames is an optional white list of names that the rule
+            applies to.
+          items:
+            type: string
+          type: array
+        resources:
+          description: Resources is a list of resources this rule applies to.
+          items:
+            type: string
+          type: array
+        verbs:
+          description: Verbs is a list of Verbs that apply to all ResourceKinds contained
+            in this rule.
+          items:
+            type: string
+          type: array
+      required:
+      - verbs
+      type: object
+    Role:
+      description: "Role is a namespaced, logical grouping of PolicyRules that can\
+        \ be referenced as a unit by a RoleBinding."
+      properties:
+        kind:
+          description: Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated.
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ObjectMeta'
+        rules:
+          description: Rules holds all the PolicyRules for this Role.
+          items:
+            $ref: '#/components/schemas/PolicyRule'
+          type: array
+      required:
+      - kind
+      - metadata
+      type: object
+    ClusterRoleBinding:
+      description: ClusterRoleBinding references a ClusterRole but does not contain
+        it. It can reference a ClusterRole in the global namespace and adds subject
+        information via the Subject field.
+      properties:
+        kind:
+          description: Kind is a string value representing the REST resource this
+            object represents.
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ObjectMeta'
+        roleRef:
+          $ref: '#/components/schemas/RoleRef'
+        subjects:
+          description: Subjects holds references to the objects the role applies to.
+          items:
+            $ref: '#/components/schemas/Subject'
+          type: array
+      required:
+      - kind
+      - metadata
+      - roleRef
+      type: object
+    RoleRef:
+      description: RoleRef contains information that points to the role being used
+      properties:
+        apiGroup:
+          description: APIGroup is the group for the resource being referenced
+          type: string
+        kind:
+          description: Kind is the type of resource being referenced
+          type: string
+        name:
+          description: Name is the name of resource being referenced
+          type: string
+      required:
+      - apiGroup
+      - kind
+      - name
+      type: object
+    Subject:
+      description: Subject contains a reference to the object or user identities a
+        role binding applies to.
+      properties:
+        apiGroup:
+          description: APIGroup holds the API group of the referenced subject.
+          type: string
+        kind:
+          description: Kind of object being referenced.
+          type: string
+        name:
+          description: Name of the object being referenced.
+          type: string
+        namespace:
+          description: Namespace of the referenced object.
+          type: string
+      required:
+      - kind
+      - name
+      type: object
+    RoleBinding:
+      description: RoleBinding references a Role in the same namespace or a ClusterRole
+        in the global namespace. It adds who information via Subjects and namespace
+        information by which namespace it exists in.
+      properties:
+        kind:
+          description: Kind is a string value representing the REST resource this
+            object represents.
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ObjectMeta'
+        roleRef:
+          $ref: '#/components/schemas/RoleRef'
+        subjects:
+          description: Subjects holds references to the objects the role applies to.
+          items:
+            $ref: '#/components/schemas/Subject'
+          type: array
+      required:
+      - kind
+      - metadata
+      - roleRef
+      type: object
+    RBACIncrementRequest:
+      description: CreateInstanceRBACRequest holds the a snapshot of data or individual
+        updates or RBAC data
+      properties:
+        _type:
+          enum:
+          - RBACIncrementRequest
+          type: string
+        collection_timestamp:
+          description: Timestamp where the data was collected by the RBAC Agent
+          format: int64
+          type: integer
+        cluster:
+          description: Cluster name which identifies the scope of the RBAC data
+          type: string
+        changes:
+          items:
+            $ref: '#/components/schemas/RbacDataChanges'
+          type: array
+      required:
+      - _type
+      - changes
+      - cluster
+      - collection_timestamp
+      type: object
+    RbacDataChanges:
+      discriminator:
+        propertyName: _type
+      oneOf:
+      - $ref: '#/components/schemas/CreateRbacData'
+      - $ref: '#/components/schemas/UpdateRbacData'
+      - $ref: '#/components/schemas/DeleteRbacData'
+      required:
+      - _type
+    CreateRbacData:
+      description: Defines a RBAC resource that needs to be created
+      properties:
+        _type:
+          enum:
+          - CreateRbacData
+          type: string
+        resource:
+          $ref: '#/components/schemas/RbacData'
+      required:
+      - _type
+      - resource
+      type: object
+    UpdateRbacData:
+      description: Defines a RBAC resource that needs to be updated
+      properties:
+        _type:
+          enum:
+          - UpdateRbacData
+          type: string
+        resource:
+          $ref: '#/components/schemas/RbacData'
+      required:
+      - _type
+      - resource
+      type: object
+    DeleteRbacData:
+      description: Defines a RBAC resource that needs to be delete
+      properties:
+        _type:
+          enum:
+          - DeleteRbacData
+          type: string
+        uid:
+          description: UID of the referent.
+          type: string
+      required:
+      - _type
+      - uid
+      type: object
+    GenericErrorsResponse:
+      example:
+        trackingKey: trackingKey
+        serverTimestamp: 0
+        _type: ErrorsResponse
+        errors:
+        - _type: InternalError
+          errorCode: 6
+          message: message
+        - _type: InternalError
+          errorCode: 6
+          message: message
+      properties:
+        _type:
+          enum:
+          - ErrorsResponse
+          type: string
+        trackingKey:
+          type: string
+        serverTimestamp:
+          format: int64
+          type: integer
+        errors:
+          items:
+            $ref: '#/components/schemas/GenericApiError'
+          type: array
+      required:
+      - errors
+      - serverTimestamp
+      - trackingKey
+      type: object
+    GenericApiError:
+      example:
+        _type: InternalError
+        errorCode: 6
+        message: message
+      properties:
+        _type:
+          enum:
+          - InternalError
+          type: string
+        message:
+          type: string
+        errorCode:
+          format: int64
+          type: integer
+      required:
+      - _type
+      - message
+      type: object
