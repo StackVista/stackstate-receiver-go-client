@@ -3,7 +3,7 @@ stages:
   - test
 
 .common:
-  image: ${DOCKER_PROXY_URL}/golang:1.20.2
+  image: ${DOCKER_PROXY_URL}/golang:1.23.4
   tags:
     - sts-k8s-m-runner
 
