@@ -50,6 +50,8 @@ type APIClient struct {
 
 	// API Services
 
+	FeaturesAPI FeaturesAPI
+
 	ReceiverRbacInstanceAPI ReceiverRbacInstanceAPI
 
 	ReceiverRbacScopeAPI ReceiverRbacScopeAPI
@@ -71,6 +73,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	c.common.client = c
 
 	// API Services
+	c.FeaturesAPI = (*FeaturesAPIService)(&c.common)
 	c.ReceiverRbacInstanceAPI = (*ReceiverRbacInstanceAPIService)(&c.common)
 	c.ReceiverRbacScopeAPI = (*ReceiverRbacScopeAPIService)(&c.common)
 

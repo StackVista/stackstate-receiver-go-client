@@ -71,6 +71,30 @@ paths:
       summary: Create scope RBAC objects
       tags:
       - receiverRbacScope
+  /stsAgent/features:
+    get:
+      description: Get supported features from the receiver.
+      operationId: getFeatures
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+          description: Get supported features from the receiver.
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorsResponse'
+          description: Error when handling the request on the server side.
+      summary: Get supported features from the receiver
+      tags:
+      - features
 components:
   responses:
     genericErrorsResponse:

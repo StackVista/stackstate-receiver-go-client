@@ -3,6 +3,7 @@
 .travis.yml
 README.md
 api/openapi.yaml
+api_features.go
 api_receiver_rbac_instance.go
 api_receiver_rbac_scope.go
 client.go
@@ -12,6 +13,7 @@ docs/ClusterRole.md
 docs/ClusterRoleBinding.md
 docs/CreateRbacData.md
 docs/DeleteRbacData.md
+docs/FeaturesAPI.md
 docs/GenericApiError.md
 docs/GenericErrorsResponse.md
 docs/LabelSelector.md
@@ -61,6 +63,7 @@ model_start_snapshot.go
 model_subject.go
 model_update_rbac_data.go
 response.go
+test/api_features_test.go
 test/api_receiver_rbac_instance_test.go
 test/api_receiver_rbac_scope_test.go
 utils.go

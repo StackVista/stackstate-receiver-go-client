@@ -80,6 +80,7 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*FeaturesAPI* | [**GetFeatures**](docs/FeaturesAPI.md#getfeatures) | **Get** /stsAgent/features | Get supported features from the receiver
 *ReceiverRbacInstanceAPI* | [**IngestInstanceRBAC**](docs/ReceiverRbacInstanceAPI.md#ingestinstancerbac) | **Post** /stsAgent/rbac/instance | Create instance RBAC objects
 *ReceiverRbacScopeAPI* | [**IngestScopeRBAC**](docs/ReceiverRbacScopeAPI.md#ingestscoperbac) | **Post** /stsAgent/rbac/scope | Create scope RBAC objects
 
