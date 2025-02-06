@@ -8,7 +8,8 @@ import (
 	"time"
 )
 
-func StartFeaturesPoller(clientCtx context.Context, featuresApi receiver_api.FeaturesAPI, interval time.Duration) (chan map[string]interface{}, func()) {
+// StartFeaturesPoller Polls the /features endpoint of SUSE Observabiity to observe which features are supported.
+func StartFeaturesPoller(clientCtx context.Context, featuresAPI receiver_api.FeaturesAPI, interval time.Duration) (chan map[string]interface{}, func()) {
 
 	outputChannel := make(chan map[string]interface{})
 	stopChannel := make(chan interface{})
@@ -29,7 +30,7 @@ func StartFeaturesPoller(clientCtx context.Context, featuresApi receiver_api.Fea
 			case <-init:
 			}
 
-			features, response, err := featuresApi.GetFeaturesExecute(featuresApi.GetFeatures(clientCtx))
+			features, response, err := featuresAPI.GetFeaturesExecute(featuresAPI.GetFeatures(clientCtx))
 			if err != nil {
 				log.Errorf("Error retrieving features: %v", err)
 				continue

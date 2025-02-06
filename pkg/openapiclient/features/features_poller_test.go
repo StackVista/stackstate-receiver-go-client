@@ -10,15 +10,15 @@ import (
 )
 
 func TestFeaturePollerProducesRepeatedResults(t *testing.T) {
-	featuresApi := receiver_api.NewFeaturesAPIMock()
+	featuresAPI := receiver_api.NewFeaturesAPIMock()
 	features := make(map[string]interface{})
-	featuresApi.GetFeaturesResponse = receiver_api.GetFeaturesMockResponse{
+	featuresAPI.GetFeaturesResponse = receiver_api.GetFeaturesMockResponse{
 		Result:   features,
 		Response: &http.Response{StatusCode: http.StatusOK},
 		Error:    nil,
 	}
 
-	outputChannel, tearDown := StartFeaturesPoller(context.Background(), featuresApi, 1*time.Second)
+	outputChannel, tearDown := StartFeaturesPoller(context.Background(), featuresAPI, 1*time.Second)
 	result := <-outputChannel
 	assert.Equal(t, features, result)
 
@@ -32,15 +32,15 @@ func TestFeaturePollerProducesRepeatedResults(t *testing.T) {
 }
 
 func TestDoesNotProduceWhenBrokenAndBeAbletoTearDown(t *testing.T) {
-	featuresApi := receiver_api.NewFeaturesAPIMock()
+	featuresAPI := receiver_api.NewFeaturesAPIMock()
 	features := make(map[string]interface{})
-	featuresApi.GetFeaturesResponse = receiver_api.GetFeaturesMockResponse{
+	featuresAPI.GetFeaturesResponse = receiver_api.GetFeaturesMockResponse{
 		Result:   features,
 		Response: &http.Response{StatusCode: http.StatusBadRequest},
 		Error:    nil,
 	}
 
-	outputChannel, tearDown := StartFeaturesPoller(context.Background(), featuresApi, 1*time.Second)
+	outputChannel, tearDown := StartFeaturesPoller(context.Background(), featuresAPI, 1*time.Second)
 	time.Sleep(1 * time.Second)
 
 	tearDown()
