@@ -3,6 +3,7 @@ package openapiclient
 import (
 	"context"
 	"crypto/tls"
+	"golang.org/x/oauth2"
 	"net"
 	"net/http"
 	"net/url"
@@ -30,11 +31,14 @@ func NewOpenAPIClient(ctx context.Context,
 	baseURL := makeBaseURL(url)
 	client, clientAuth := newAPIClient(isVerbose, userAgent, baseURL, apiToken, k8sServiceAccountToken, skipSSL, proxy)
 
-	withClient := context.WithValue(
-		ctx,
-		receiver_api.ContextAPIKeys,
-		clientAuth,
-	)
+	withClient := ctx
+	if clientAuth != nil {
+		withClient = context.WithValue(
+			ctx,
+			receiver_api.ContextOAuth2,
+			clientAuth,
+		)
+	}
 
 	return openAPIClientImpl{
 		client:      client,
@@ -51,7 +55,7 @@ func newAPIClient(
 	k8sServiceAccountToken string,
 	skipSSL bool,
 	proxy *url.URL,
-) (*receiver_api.APIClient, map[string]receiver_api.APIKey) {
+) (*receiver_api.APIClient, oauth2.TokenSource) {
 	configuration := receiver_api.NewConfiguration()
 
 	transport := &http.Transport{
@@ -85,21 +89,20 @@ func newAPIClient(
 
 	client := receiver_api.NewAPIClient(configuration)
 
-	auth := make(map[string]receiver_api.APIKey)
 	if apiKey != "" {
-		auth["ApiKey"] = receiver_api.APIKey{
-			Key:    apiKey,
-			Prefix: "",
-		}
+		return client, oauth2.StaticTokenSource(&oauth2.Token{
+			AccessToken: apiKey,
+			TokenType:   "ApiKey",
+		})
 	}
 	if k8sServiceAccountToken != "" {
-		auth["ServiceBearer"] = receiver_api.APIKey{
-			Key:    k8sServiceAccountToken,
-			Prefix: "",
-		}
+		return client, oauth2.StaticTokenSource(&oauth2.Token{
+			AccessToken: k8sServiceAccountToken,
+			TokenType:   "ServiceBearer",
+		})
 	}
 
-	return client, auth
+	return client, nil
 }
 
 type openAPIClientImpl struct {
