@@ -15,7 +15,7 @@ import (
 
 // OpenAPIClient provides a client for connecting to the openapi generated portion of the receiver api
 type OpenAPIClient interface {
-	Connect() (*receiver_api.APIClient, error)
+	Connect() *receiver_api.APIClient
 }
 
 // NewOpenAPIClient constructs the OpenAPIClient client
@@ -108,11 +108,11 @@ type openAPIClientImpl struct {
 	receiverURL string
 }
 
-func (c openAPIClientImpl) Connect() (*receiver_api.APIClient, error) {
+func (c openAPIClientImpl) Connect() *receiver_api.APIClient {
 	// Placeholder in case we want to do something while connecting
 	log.Infof("Connected to receiver: %s", c.receiverURL)
 
-	return c.client, nil
+	return c.client
 }
 
 // Drop /stsAgent/ part from the url is it exists, because it is included in openapi
