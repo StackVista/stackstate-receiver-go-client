@@ -18,13 +18,13 @@ import (
 // PolicyRule PolicyRule holds information that describes a policy rule.
 type PolicyRule struct {
 	// APIGroups is the name of the APIGroup that contains the resources.
-	ApiGroups []string `json:"apiGroups,omitempty"`
+	ApiGroups []string `json:"apiGroups"`
 	// NonResourceURLs is a set of partial URLs that a user should have access to.
 	NonResourceURLs []string `json:"nonResourceURLs,omitempty"`
 	// ResourceNames is an optional white list of names that the rule applies to.
 	ResourceNames []string `json:"resourceNames,omitempty"`
 	// Resources is a list of resources this rule applies to.
-	Resources []string `json:"resources,omitempty"`
+	Resources []string `json:"resources"`
 	// Verbs is a list of Verbs that apply to all ResourceKinds contained in this rule.
 	Verbs []string `json:"verbs"`
 }
@@ -33,8 +33,10 @@ type PolicyRule struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewPolicyRule(verbs []string) *PolicyRule {
+func NewPolicyRule(apiGroups []string, resources []string, verbs []string) *PolicyRule {
 	this := PolicyRule{}
+	this.ApiGroups = apiGroups
+	this.Resources = resources
 	this.Verbs = verbs
 	return &this
 }
@@ -47,34 +49,26 @@ func NewPolicyRuleWithDefaults() *PolicyRule {
 	return &this
 }
 
-// GetApiGroups returns the ApiGroups field value if set, zero value otherwise.
+// GetApiGroups returns the ApiGroups field value
 func (o *PolicyRule) GetApiGroups() []string {
-	if o == nil || o.ApiGroups == nil {
+	if o == nil {
 		var ret []string
 		return ret
 	}
+
 	return o.ApiGroups
 }
 
-// GetApiGroupsOk returns a tuple with the ApiGroups field value if set, nil otherwise
+// GetApiGroupsOk returns a tuple with the ApiGroups field value
 // and a boolean to check if the value has been set.
 func (o *PolicyRule) GetApiGroupsOk() ([]string, bool) {
-	if o == nil || o.ApiGroups == nil {
+	if o == nil {
 		return nil, false
 	}
 	return o.ApiGroups, true
 }
 
-// HasApiGroups returns a boolean if a field has been set.
-func (o *PolicyRule) HasApiGroups() bool {
-	if o != nil && o.ApiGroups != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetApiGroups gets a reference to the given []string and assigns it to the ApiGroups field.
+// SetApiGroups sets field value
 func (o *PolicyRule) SetApiGroups(v []string) {
 	o.ApiGroups = v
 }
@@ -143,34 +137,26 @@ func (o *PolicyRule) SetResourceNames(v []string) {
 	o.ResourceNames = v
 }
 
-// GetResources returns the Resources field value if set, zero value otherwise.
+// GetResources returns the Resources field value
 func (o *PolicyRule) GetResources() []string {
-	if o == nil || o.Resources == nil {
+	if o == nil {
 		var ret []string
 		return ret
 	}
+
 	return o.Resources
 }
 
-// GetResourcesOk returns a tuple with the Resources field value if set, nil otherwise
+// GetResourcesOk returns a tuple with the Resources field value
 // and a boolean to check if the value has been set.
 func (o *PolicyRule) GetResourcesOk() ([]string, bool) {
-	if o == nil || o.Resources == nil {
+	if o == nil {
 		return nil, false
 	}
 	return o.Resources, true
 }
 
-// HasResources returns a boolean if a field has been set.
-func (o *PolicyRule) HasResources() bool {
-	if o != nil && o.Resources != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetResources gets a reference to the given []string and assigns it to the Resources field.
+// SetResources sets field value
 func (o *PolicyRule) SetResources(v []string) {
 	o.Resources = v
 }
@@ -201,7 +187,7 @@ func (o *PolicyRule) SetVerbs(v []string) {
 
 func (o PolicyRule) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if o.ApiGroups != nil {
+	if true {
 		toSerialize["apiGroups"] = o.ApiGroups
 	}
 	if o.NonResourceURLs != nil {
@@ -210,7 +196,7 @@ func (o PolicyRule) MarshalJSON() ([]byte, error) {
 	if o.ResourceNames != nil {
 		toSerialize["resourceNames"] = o.ResourceNames
 	}
-	if o.Resources != nil {
+	if true {
 		toSerialize["resources"] = o.Resources
 	}
 	if true {
