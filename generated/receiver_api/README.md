@@ -102,6 +102,7 @@ Class | Method | HTTP request | Description
  - [PolicyRule](docs/PolicyRule.md)
  - [RBACIncrementRequest](docs/RBACIncrementRequest.md)
  - [RBACRequest](docs/RBACRequest.md)
+ - [RBACResponseError](docs/RBACResponseError.md)
  - [RBACSnapshotRequest](docs/RBACSnapshotRequest.md)
  - [RbacData](docs/RbacData.md)
  - [RbacDataChanges](docs/RbacDataChanges.md)

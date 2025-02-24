@@ -24,6 +24,7 @@ docs/OwnerReference.md
 docs/PolicyRule.md
 docs/RBACIncrementRequest.md
 docs/RBACRequest.md
+docs/RBACResponseError.md
 docs/RBACSnapshotRequest.md
 docs/RbacData.md
 docs/RbacDataChanges.md
@@ -55,6 +56,7 @@ model_rbac_data.go
 model_rbac_data_changes.go
 model_rbac_increment_request.go
 model_rbac_request.go
+model_rbac_response_error.go
 model_rbac_snapshot_request.go
 model_role.go
 model_role_binding.go
