@@ -871,8 +871,6 @@ components:
             type: string
           type: array
       required:
-      - apiGroups
-      - resources
       - verbs
       type: object
     Role:
