@@ -74,7 +74,7 @@ forwardHandler:
 			} else {
 				f.ProgressTransactions(payload.TransactionActionMap)
 
-				log.Infof("Sent transactional payload, size: %d bytes.", len(payload.Body))
+				log.Infof("Sent transactional payload to %s, size: %d bytes.", payload.Path, len(payload.Body))
 				if f.logPayloads {
 					log.Debugf("Sent transactional payload, response status: %s (%d).", response.Response.Status,
 						response.Response.StatusCode)
