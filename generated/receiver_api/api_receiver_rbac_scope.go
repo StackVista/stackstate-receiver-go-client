@@ -101,7 +101,7 @@ func (a *ReceiverRbacScopeAPIService) IngestScopeRBACExecute(r ApiIngestScopeRBA
 	}
 
 	// to determine the Accept header
-	localVarHTTPHeaderAccepts := []string{"application/json"}
+	localVarHTTPHeaderAccepts := []string{"application/json", "text/plain"}
 
 	// set Accept header
 	localVarHTTPHeaderAccept := selectHeaderAccept(localVarHTTPHeaderAccepts)
@@ -145,7 +145,7 @@ func (a *ReceiverRbacScopeAPIService) IngestScopeRBACExecute(r ApiIngestScopeRBA
 			return localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 500 {
-			var v GenericErrorsResponse
+			var v string
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
 				newErr.error = fmt.Errorf(

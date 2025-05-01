@@ -14,8 +14,6 @@ docs/ClusterRoleBinding.md
 docs/CreateRbacData.md
 docs/DeleteRbacData.md
 docs/FeaturesAPI.md
-docs/GenericApiError.md
-docs/GenericErrorsResponse.md
 docs/LabelSelector.md
 docs/LabelSelectorRequirement.md
 docs/ManagedFieldsEntry.md
@@ -44,8 +42,6 @@ model_cluster_role.go
 model_cluster_role_binding.go
 model_create_rbac_data.go
 model_delete_rbac_data.go
-model_generic_api_error.go
-model_generic_errors_response.go
 model_label_selector.go
 model_label_selector_requirement.go
 model_managed_fields_entry.go

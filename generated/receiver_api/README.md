@@ -92,8 +92,6 @@ Class | Method | HTTP request | Description
  - [ClusterRoleBinding](docs/ClusterRoleBinding.md)
  - [CreateRbacData](docs/CreateRbacData.md)
  - [DeleteRbacData](docs/DeleteRbacData.md)
- - [GenericApiError](docs/GenericApiError.md)
- - [GenericErrorsResponse](docs/GenericErrorsResponse.md)
  - [LabelSelector](docs/LabelSelector.md)
  - [LabelSelectorRequirement](docs/LabelSelectorRequirement.md)
  - [ManagedFieldsEntry](docs/ManagedFieldsEntry.md)

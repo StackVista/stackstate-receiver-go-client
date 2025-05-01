@@ -43,9 +43,9 @@ paths:
           description: Forbidden
         "500":
           content:
-            application/json:
+            text/plain:
               schema:
-                $ref: '#/components/schemas/GenericErrorsResponse'
+                $ref: '#/components/schemas/ReceiverGenericErrorsResponse'
           description: Error when handling the request on the server side.
       summary: Create instance RBAC objects
       tags:
@@ -76,9 +76,9 @@ paths:
           description: Forbidden
         "500":
           content:
-            application/json:
+            text/plain:
               schema:
-                $ref: '#/components/schemas/GenericErrorsResponse'
+                $ref: '#/components/schemas/ReceiverGenericErrorsResponse'
           description: Error when handling the request on the server side.
       summary: Create scope RBAC objects
       tags:
@@ -100,9 +100,9 @@ paths:
           description: Forbidden
         "500":
           content:
-            application/json:
+            text/plain:
               schema:
-                $ref: '#/components/schemas/GenericErrorsResponse'
+                $ref: '#/components/schemas/ReceiverGenericErrorsResponse'
           description: Error when handling the request on the server side.
       summary: Get supported features from the receiver
       tags:
@@ -115,11 +115,11 @@ components:
           schema:
             $ref: '#/components/schemas/RBACResponseError'
       description: Error while executing the request.
-    genericErrorsResponse:
+    receiverGenericErrorsResponse:
       content:
-        application/json:
+        text/plain:
           schema:
-            $ref: '#/components/schemas/GenericErrorsResponse'
+            $ref: '#/components/schemas/ReceiverGenericErrorsResponse'
       description: Error when handling the request on the server side.
   schemas:
     RBACRequest:
@@ -871,8 +871,6 @@ components:
             type: string
           type: array
       required:
-      - apiGroups
-      - resources
       - verbs
       type: object
     Role:
@@ -1067,53 +1065,5 @@ components:
       - _type
       - message
       type: object
-    GenericErrorsResponse:
-      example:
-        trackingKey: trackingKey
-        serverTimestamp: 0
-        _type: ErrorsResponse
-        errors:
-        - _type: InternalError
-          errorCode: 6
-          message: message
-        - _type: InternalError
-          errorCode: 6
-          message: message
-      properties:
-        _type:
-          enum:
-          - ErrorsResponse
-          type: string
-        trackingKey:
-          type: string
-        serverTimestamp:
-          format: int64
-          type: integer
-        errors:
-          items:
-            $ref: '#/components/schemas/GenericApiError'
-          type: array
-      required:
-      - errors
-      - serverTimestamp
-      - trackingKey
-      type: object
-    GenericApiError:
-      example:
-        _type: InternalError
-        errorCode: 6
-        message: message
-      properties:
-        _type:
-          enum:
-          - InternalError
-          type: string
-        message:
-          type: string
-        errorCode:
-          format: int64
-          type: integer
-      required:
-      - _type
-      - message
-      type: object
+    ReceiverGenericErrorsResponse:
+      type: string

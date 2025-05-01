@@ -4,17 +4,17 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**ApiGroups** | **[]string** | APIGroups is the name of the APIGroup that contains the resources. | 
+**ApiGroups** | Pointer to **[]string** | APIGroups is the name of the APIGroup that contains the resources. | [optional] 
 **NonResourceURLs** | Pointer to **[]string** | NonResourceURLs is a set of partial URLs that a user should have access to. | [optional] 
 **ResourceNames** | Pointer to **[]string** | ResourceNames is an optional white list of names that the rule applies to. | [optional] 
-**Resources** | **[]string** | Resources is a list of resources this rule applies to. | 
+**Resources** | Pointer to **[]string** | Resources is a list of resources this rule applies to. | [optional] 
 **Verbs** | **[]string** | Verbs is a list of Verbs that apply to all ResourceKinds contained in this rule. | 
 
 ## Methods
 
 ### NewPolicyRule
 
-`func NewPolicyRule(apiGroups []string, resources []string, verbs []string, ) *PolicyRule`
+`func NewPolicyRule(verbs []string, ) *PolicyRule`
 
 NewPolicyRule instantiates a new PolicyRule object
 This constructor will assign default values to properties that have it defined,
@@ -48,6 +48,11 @@ and a boolean to check if the value has been set.
 
 SetApiGroups sets ApiGroups field to given value.
 
+### HasApiGroups
+
+`func (o *PolicyRule) HasApiGroups() bool`
+
+HasApiGroups returns a boolean if a field has been set.
 
 ### GetNonResourceURLs
 
@@ -118,6 +123,11 @@ and a boolean to check if the value has been set.
 
 SetResources sets Resources field to given value.
 
+### HasResources
+
+`func (o *PolicyRule) HasResources() bool`
+
+HasResources returns a boolean if a field has been set.
 
 ### GetVerbs
 
