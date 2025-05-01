@@ -465,7 +465,7 @@ func (c *APIClient) decode(v interface{}, b []byte, contentType string) (err err
 		}
 		return nil
 	}
-	return errors.New("undefined response type")
+	return fmt.Errorf("unknown content type, should be json or xml: %s", contentType)
 }
 
 // Add a file to the multipart request

@@ -14,6 +14,7 @@ package receiver_api
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -135,7 +136,9 @@ func (a *ReceiverRbacScopeAPIService) IngestScopeRBACExecute(r ApiIngestScopeRBA
 			var v RBACResponseError
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
-				newErr.error = err.Error()
+				newErr.error = fmt.Errorf(
+					"error decoding response with code 400 and body: '%s'. error: %w",
+					string(localVarBody), err).Error()
 				return localVarHTTPResponse, newErr
 			}
 			newErr.model = v
@@ -145,7 +148,9 @@ func (a *ReceiverRbacScopeAPIService) IngestScopeRBACExecute(r ApiIngestScopeRBA
 			var v GenericErrorsResponse
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
-				newErr.error = err.Error()
+				newErr.error = fmt.Errorf(
+					"error decoding response with code 500 and body: '%s'. error: %w",
+					string(localVarBody), err).Error()
 				return localVarHTTPResponse, newErr
 			}
 			newErr.model = v

@@ -14,6 +14,7 @@ package receiver_api
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -128,7 +129,9 @@ func (a *FeaturesAPIService) GetFeaturesExecute(r ApiGetFeaturesRequest) (map[st
 			var v GenericErrorsResponse
 			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 			if err != nil {
-				newErr.error = err.Error()
+				newErr.error = fmt.Errorf(
+					"error decoding response with code 500 and body: '%s'. error: %w",
+					string(localVarBody), err).Error()
 				return localVarReturnValue, localVarHTTPResponse, newErr
 			}
 			newErr.model = v
@@ -139,8 +142,9 @@ func (a *FeaturesAPIService) GetFeaturesExecute(r ApiGetFeaturesRequest) (map[st
 	err = a.client.decode(&localVarReturnValue, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
 	if err != nil {
 		newErr := &GenericOpenAPIError{
-			body:  localVarBody,
-			error: err.Error(),
+			body: localVarBody,
+			error: fmt.Errorf(
+				"error decoding success response with body: '%s'. error: %w", string(localVarBody), err).Error(),
 		}
 		return localVarReturnValue, localVarHTTPResponse, newErr
 	}
