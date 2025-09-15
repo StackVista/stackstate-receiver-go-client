@@ -3,12 +3,13 @@ package openapiclient
 import (
 	"context"
 	"crypto/tls"
-	"golang.org/x/oauth2"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"golang.org/x/oauth2"
 
 	"github.com/StackVista/stackstate-receiver-go-client/generated/receiver_api"
 	log "github.com/cihub/seelog"
@@ -79,6 +80,7 @@ func newAPIClient(
 		transport.Proxy = http.ProxyURL(proxy)
 	}
 
+	configuration.HTTPClient = &http.Client{Timeout: 30 * time.Second, Transport: transport}
 	configuration.UserAgent = userAgent
 	configuration.Servers[0] = receiver_api.ServerConfiguration{
 		URL:         receiverURL,
