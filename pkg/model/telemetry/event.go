@@ -72,7 +72,6 @@ type Event struct {
 	EventType      string         `json:"event_type,omitempty"`
 	OriginID       string         `json:"-"`
 	K8sOriginID    string         `json:"-"`
-	Cardinality    string         `json:"-"`
 	EventContext   *EventContext  `json:"context,omitempty"`
 }
 
