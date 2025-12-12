@@ -26,11 +26,11 @@ func NewOpenAPIClient(ctx context.Context,
 	userAgent string,
 	url string,
 	apiToken string,
-	k8sServiceAccountToken string,
+	serviceAccountToken func() string,
 	skipSSL bool,
 	proxy *url.URL) (OpenAPIClient, context.Context) {
 	baseURL := makeBaseURL(url)
-	client, clientAuth := newAPIClient(isVerbose, userAgent, baseURL, apiToken, k8sServiceAccountToken, skipSSL, proxy)
+	client, clientAuth := newAPIClient(isVerbose, userAgent, baseURL, apiToken, serviceAccountToken, skipSSL, proxy)
 
 	withClient := ctx
 	if clientAuth != nil {
@@ -53,7 +53,7 @@ func newAPIClient(
 	userAgent string,
 	receiverURL string,
 	apiKey string,
-	k8sServiceAccountToken string,
+	serviceAccountToken func() string,
 	skipSSL bool,
 	proxy *url.URL,
 ) (*receiver_api.APIClient, oauth2.TokenSource) {
@@ -97,9 +97,10 @@ func newAPIClient(
 			TokenType:   "ApiKey",
 		})
 	}
-	if k8sServiceAccountToken != "" {
+	token := serviceAccountToken()
+	if token != "" {
 		return client, oauth2.StaticTokenSource(&oauth2.Token{
-			AccessToken: k8sServiceAccountToken,
+			AccessToken: token,
 			TokenType:   "ServiceBearer",
 		})
 	}
