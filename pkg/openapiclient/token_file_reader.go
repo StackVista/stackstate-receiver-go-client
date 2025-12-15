@@ -2,11 +2,12 @@ package openapiclient
 
 import (
 	"fmt"
-	log "github.com/cihub/seelog"
 	"os"
 	"strings"
 	"sync"
 	"time"
+
+	log "github.com/cihub/seelog"
 )
 
 // PeriodicTokenFileReader can be used to periodically read a token from a file.
@@ -68,7 +69,7 @@ func (r *PeriodicTokenFileReader) run() {
 			if err != nil {
 				log.Errorf("Failed to read token from file: %v", err)
 			} else {
-				log.Debugf("Read token from file: %v", err)
+				log.Debugf("Read token from file: %v", r.filePath)
 			}
 		case <-r.stopChan:
 			return
