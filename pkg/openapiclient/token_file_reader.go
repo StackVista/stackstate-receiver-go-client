@@ -87,7 +87,10 @@ func (r *PeriodicTokenFileReader) refreshToken() error {
 	newToken := strings.TrimSpace(string(data))
 
 	r.mutex.Lock()
-	r.token = newToken
+	if r.token != newToken {
+		log.Infof("Found new token from file: %v", r.filePath)
+		r.token = newToken
+	}
 	r.mutex.Unlock()
 
 	return nil

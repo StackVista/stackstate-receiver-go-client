@@ -99,13 +99,25 @@ func newAPIClient(
 	}
 	token := serviceAccountToken()
 	if token != "" {
-		return client, oauth2.StaticTokenSource(&oauth2.Token{
-			AccessToken: token,
-			TokenType:   "ServiceBearer",
-		})
+		return client, dynamicTokenSource{tokenFunc: serviceAccountToken, tokenType: "ServiceBearer"}
 	}
 
 	return client, nil
+}
+
+// dynamicTokenSource calls tokenFunc on every Token() invocation so that
+// refreshed credentials (e.g. rotated Kubernetes service-account tokens) are
+// picked up automatically.
+type dynamicTokenSource struct {
+	tokenFunc func() string
+	tokenType string
+}
+
+func (d dynamicTokenSource) Token() (*oauth2.Token, error) {
+	return &oauth2.Token{
+		AccessToken: d.tokenFunc(),
+		TokenType:   d.tokenType,
+	}, nil
 }
 
 type openAPIClientImpl struct {
