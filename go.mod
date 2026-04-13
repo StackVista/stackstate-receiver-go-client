@@ -1,6 +1,6 @@
 module github.com/StackVista/stackstate-receiver-go-client
 
-go 1.18
+go 1.26
 
 require (
 	github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575
