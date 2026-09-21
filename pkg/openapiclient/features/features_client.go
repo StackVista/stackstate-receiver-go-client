@@ -22,6 +22,8 @@ type QueryOptions struct {
 	Timeout, AttemptTimeout    time.Duration
 	MaxAttempts                int
 	InitialBackoff, MaxBackoff time.Duration
+	// BooleanCapabilities validates only listed keys that are present in the response.
+	BooleanCapabilities []string
 }
 
 // Client queries the generated features API with bounded retries.
@@ -40,6 +42,7 @@ func NewClient(api receiver_api.FeaturesAPI, opts QueryOptions) (*Client, error)
 	if opts.Timeout <= 0 || opts.AttemptTimeout <= 0 || opts.AttemptTimeout > opts.Timeout || opts.MaxAttempts < 1 || opts.InitialBackoff <= 0 || opts.MaxBackoff < opts.InitialBackoff {
 		return nil, errors.New("invalid feature query timeout, attempt count or backoff bounds")
 	}
+	opts.BooleanCapabilities = append([]string(nil), opts.BooleanCapabilities...)
 	return &Client{api: api, opts: opts, now: time.Now, random: rand.Float64}, nil
 }
 
@@ -68,7 +71,7 @@ func (c *Client) FetchFeatures(authCtx context.Context) Result {
 				response.Body.Close()
 			}
 		}
-		result.Class = classify(authCtx, attemptCtx, values, response, err)
+		result.Class = c.classify(authCtx, attemptCtx, values, response, err)
 		stop()
 		if result.Class == Valid {
 			result.Features = values
@@ -117,7 +120,7 @@ func contextClass(parent context.Context, err error) Class {
 	return Canceled
 }
 
-func classify(parent, attempt context.Context, values map[string]any, response *http.Response, err error) Class {
+func (c *Client) classify(parent, attempt context.Context, values map[string]any, response *http.Response, err error) Class {
 	if parent.Err() != nil {
 		return Canceled
 	}
@@ -166,9 +169,11 @@ func classify(parent, attempt context.Context, values map[string]any, response *
 	if err != nil || values == nil {
 		return Malformed
 	}
-	if capability, present := values["otel-logs"]; present {
-		if _, ok := capability.(bool); !ok {
-			return Malformed
+	for _, key := range c.opts.BooleanCapabilities {
+		if capability, present := values[key]; present {
+			if _, ok := capability.(bool); !ok {
+				return Malformed
+			}
 		}
 	}
 	return Valid

@@ -31,11 +31,12 @@ const (
 
 func queryTestOptions() features.QueryOptions {
 	return features.QueryOptions{
-		Timeout:        10 * time.Second,
-		AttemptTimeout: time.Second,
-		MaxAttempts:    3,
-		InitialBackoff: time.Nanosecond,
-		MaxBackoff:     time.Nanosecond,
+		Timeout:             10 * time.Second,
+		AttemptTimeout:      time.Second,
+		MaxAttempts:         3,
+		InitialBackoff:      time.Nanosecond,
+		MaxBackoff:          time.Nanosecond,
+		BooleanCapabilities: []string{"otel-logs"},
 	}
 }
 
@@ -217,6 +218,82 @@ func TestFetchFeaturesHTTPResponseLimit(t *testing.T) {
 			checkQueryResult(t, client.FetchFeatures(ctx), class, status, 1, started)
 		})
 	}
+}
+
+func TestFetchFeaturesConsumerCapabilities(t *testing.T) {
+	for _, consumer := range []struct {
+		name string
+		keys []string
+	}{
+		{"logs", []string{"otel-logs"}},
+		{"rbac", []string{"k8s-rbac"}},
+		{"both", []string{"otel-logs", "k8s-rbac"}},
+		{"object_only", nil},
+	} {
+		for _, tt := range []struct {
+			name string
+			body string
+		}{
+			{"empty", `{}`},
+			{"absent", `{"capacity":42}`},
+			{"enabled", `{"otel-logs":true,"k8s-rbac":true,"capacity":42}`},
+			{"disabled", `{"otel-logs":false,"k8s-rbac":false}`},
+			{"logs_string", `{"otel-logs":"true","k8s-rbac":true}`},
+			{"rbac_string", `{"otel-logs":true,"k8s-rbac":"true"}`},
+			{"logs_null", `{"otel-logs":null,"k8s-rbac":true}`},
+			{"rbac_null", `{"otel-logs":true,"k8s-rbac":null}`},
+			{"null", `null`},
+			{"scalar", `true`},
+			{"array", `[]`},
+			{"invalid", `{`},
+			{"oversized", `{"padding":"` + strings.Repeat("x", 1<<20) + `"}`},
+		} {
+			t.Run(consumer.name+"/"+tt.name, func(t *testing.T) {
+				opts := queryTestOptions()
+				opts.BooleanCapabilities = consumer.keys
+				client, ctx := newHTTPQueryTestClient(t, func(w http.ResponseWriter, _ *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+					_, _ = io.WriteString(w, tt.body)
+				}, opts)
+				wantClass := features.Valid
+				switch tt.name {
+				case "null", "scalar", "array", "invalid", "oversized":
+					wantClass = features.Malformed
+				case "logs_string", "logs_null":
+					if consumer.name == "logs" || consumer.name == "both" {
+						wantClass = features.Malformed
+					}
+				case "rbac_string", "rbac_null":
+					if consumer.name == "rbac" || consumer.name == "both" {
+						wantClass = features.Malformed
+					}
+				}
+				started := time.Now()
+				result := client.FetchFeatures(ctx)
+				checkQueryResult(t, result, wantClass, 200, 1, started)
+				if wantClass == features.Valid {
+					var want map[string]any
+					if err := json.Unmarshal([]byte(tt.body), &want); err != nil {
+						t.Fatal(err)
+					}
+					if !reflect.DeepEqual(result.Features, want) {
+						t.Error("query changed unrelated capability values")
+					}
+				}
+			})
+		}
+	}
+}
+
+func TestQueryOptionsCopiesCapabilities(t *testing.T) {
+	opts := queryTestOptions()
+	client, ctx := newHTTPQueryTestClient(t, func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, `{"otel-logs":"true","k8s-rbac":true}`)
+	}, opts)
+	opts.BooleanCapabilities[0] = "k8s-rbac"
+	started := time.Now()
+	checkQueryResult(t, client.FetchFeatures(ctx), features.Malformed, 200, 1, started)
 }
 
 func TestFetchFeaturesHTTPTransientRecovery(t *testing.T) {
