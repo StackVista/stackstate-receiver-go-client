@@ -3,8 +3,12 @@ package openapiclient
 import (
 	"crypto/tls"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 )
+
+const maxFeatureResponseBytes = 1 << 20
 
 func newTransport(opts ConnectionOptions) (http.RoundTripper, error) {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
@@ -17,5 +21,43 @@ func newTransport(opts ConnectionOptions) (http.RoundTripper, error) {
 		}
 		transport.Proxy = http.ProxyURL(proxy)
 	}
-	return transport, nil
+	return boundedTransport{transport}, nil
+}
+
+type boundedTransport struct{ base http.RoundTripper }
+
+func (t boundedTransport) CloseIdleConnections() {
+	if transport, ok := t.base.(interface{ CloseIdleConnections() }); ok {
+		transport.CloseIdleConnections()
+	}
+}
+
+func (t boundedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	response, err := t.base.RoundTrip(req)
+	if response != nil && response.Body != nil && strings.HasSuffix(req.URL.Path, "/stsAgent/features") {
+		response.Body = &boundedBody{ReadCloser: response.Body, remaining: maxFeatureResponseBytes}
+	}
+	return response, err
+}
+
+type boundedBody struct {
+	io.ReadCloser
+	remaining int
+}
+
+func (b *boundedBody) Read(p []byte) (int, error) {
+	if len(p) == 0 {
+		return 0, nil
+	}
+	if len(p) > b.remaining+1 {
+		p = p[:b.remaining+1]
+	}
+	n, err := b.ReadCloser.Read(p)
+	if n > b.remaining {
+		n = b.remaining
+		b.remaining = 0
+		return n, ErrResponseTooLarge
+	}
+	b.remaining -= n
+	return n, err
 }

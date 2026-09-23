@@ -8,6 +8,10 @@ Part of the receiver API is compatible with DataDog, those parts are extracted h
 
 Provide exactly one authentication source: `APIKey` or `ServiceAccountToken`. The token callback is read on every request, including after rotation; empty credentials and header delimiters are rejected. The existing `NewOpenAPIClient` signature, `Connect()` method and legacy authentication behavior remain available unchanged.
 
+### Capability queries
+
+Feature queries bound attempts, elapsed time and response bodies (1 MiB). Set `QueryOptions.BooleanCapabilities` to the keys the consumer requires as booleans, such as `otel-logs` or `k8s-rbac`. Missing keys are valid, unrelated values are preserved, and an empty list checks only the response object. A 404 means the endpoint was not found; it cannot distinguish an older Receiver from an incorrect base path. Query results expose status and outcome without raw URLs, errors or bodies.
+
 ### Bumping the openapi version
 
 - Change the version/branch/commit sha in the `stackstate_openapi/openapi_version` file

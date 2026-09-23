@@ -196,7 +196,7 @@ func TestProxyAndRedirectBoundaries(t *testing.T) {
 	t.Setenv("HTTPS_PROXY", proxy.URL)
 	transport, err := newTransport(testOptions("http://receiver"))
 	require.NoError(t, err)
-	assert.Nil(t, transport.(*http.Transport).Proxy)
+	assert.Nil(t, transport.(boundedTransport).base.(*http.Transport).Proxy)
 	var redirected atomic.Int32
 	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { redirected.Add(1); fmt.Fprint(w, `{}`) }))
 	defer target.Close()
