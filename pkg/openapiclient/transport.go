@@ -38,6 +38,12 @@ func newTransport(opts ConnectionOptions) (http.RoundTripper, error) {
 
 type boundedTransport struct{ base http.RoundTripper }
 
+func (t boundedTransport) CloseIdleConnections() {
+	if transport, ok := t.base.(interface{ CloseIdleConnections() }); ok {
+		transport.CloseIdleConnections()
+	}
+}
+
 func (t boundedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	response, err := t.base.RoundTrip(req)
 	if response != nil && response.Body != nil && strings.HasSuffix(req.URL.Path, "/stsAgent/features") {
