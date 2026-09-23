@@ -53,13 +53,13 @@ func newHTTPQueryTestClient(t *testing.T, handler http.HandlerFunc, opts feature
 	t.Helper()
 	server := httptest.NewServer(handler)
 	t.Cleanup(server.Close)
-	api, authCtx, err := openapiclient.NewOpenAPIClient(context.Background(), openapiclient.ConnectionOptions{
+	api, authCtx, err := openapiclient.NewOpenAPIClientWithOptions(context.Background(), openapiclient.ConnectionOptions{
 		ReceiverURL:    server.URL + "/deployment/stsAgent/",
 		APIKey:         queryTestAPIKey,
 		RequestTimeout: 5 * time.Second,
 	})
 	if err != nil {
-		t.Fatalf("NewOpenAPIClient: %v", err)
+		t.Fatalf("NewOpenAPIClientWithOptions: %v", err)
 	}
 	return newQueryTestClient(t, api.FeaturesAPI, opts), authCtx
 }

@@ -44,7 +44,3 @@ func parseEndpoint(raw string, allowUserinfo bool) (*url.URL, error) {
 	}
 	return u, nil
 }
-
-func makeBaseURL(raw string) string {
-	return strings.TrimSuffix(strings.TrimRight(raw, "/"), "/stsAgent")
-}
