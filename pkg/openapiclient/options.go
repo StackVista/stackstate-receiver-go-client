@@ -15,7 +15,6 @@ type ConnectionOptions struct {
 	APIKey              string
 	ServiceAccountToken func() string
 	ProxyURL            string
-	CABundlePEM         []byte
 	InsecureSkipVerify  bool
 	RequestTimeout      time.Duration
 }

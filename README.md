@@ -4,7 +4,7 @@ Part of the receiver API is compatible with DataDog, those parts are extracted h
 
 ### OpenAPI connection options
 
-`NewOpenAPIClientWithOptions` constructs an authenticated client with its own HTTP transport and a required request timeout. Supply the final Receiver URL: redirects are rejected, including same-host HTTP-to-HTTPS and trailing-slash redirects. Set `ConnectionOptions.ProxyURL` explicitly when a proxy is required; the transport does not read proxy environment variables. `CABundlePEM` adds trusted certificates to the system roots.
+`NewOpenAPIClientWithOptions` constructs an authenticated client with its own HTTP transport and a required request timeout. Supply the final Receiver URL: redirects are rejected, including same-host HTTP-to-HTTPS and trailing-slash redirects. Set `ConnectionOptions.ProxyURL` explicitly when a proxy is required; the transport does not read proxy environment variables. TLS uses the system trust store.
 
 Provide exactly one authentication source: `APIKey` or `ServiceAccountToken`. The token callback is read on every request, including after rotation; empty credentials and header delimiters are rejected. The existing `NewOpenAPIClient` signature, `Connect()` method and legacy authentication behavior remain available unchanged.
 
