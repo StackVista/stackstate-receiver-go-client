@@ -2,11 +2,13 @@ package openapiclient
 
 import (
 	"context"
-	"crypto/x509"
 	"encoding/pem"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -72,7 +74,6 @@ func TestConnectionValidationIsCredentialSafe(t *testing.T) {
 		"invalid header":   func(o *ConnectionOptions) { o.APIKey = "synthetic-secret\r\n" },
 		"empty token":      func(o *ConnectionOptions) { o.APIKey = ""; o.ServiceAccountToken = func() string { return "" } },
 		"two auth sources": func(o *ConnectionOptions) { o.ServiceAccountToken = func() string { return "synthetic-secret" } },
-		"CA":               func(o *ConnectionOptions) { o.CABundlePEM = []byte("synthetic-secret") },
 		"proxy":            func(o *ConnectionOptions) { o.ProxyURL = "socks5://synthetic-secret" },
 	}
 	for name, modify := range cases {
@@ -131,17 +132,21 @@ func TestTLSOptions(t *testing.T) {
 	}))
 	defer server.Close()
 	ca := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: server.Certificate().Raw})
+	caFile := filepath.Join(t.TempDir(), "receiver-ca.pem")
+	require.NoError(t, os.WriteFile(caFile, ca, 0600))
+	command := exec.Command(os.Args[0], "-test.run=^TestTLSOptionsSystemTrustHelper$")
+	command.Env = append(os.Environ(), "SSL_CERT_FILE="+caFile, "RECEIVER_TEST_URL="+server.URL)
+	output, err := command.CombinedOutput()
+	require.NoErrorf(t, err, "system trust helper failed: %s", output)
 	for _, tc := range []struct {
 		name     string
-		ca       []byte
 		skip     bool
 		succeeds bool
 	}{
-		{name: "untrusted"}, {name: "custom CA", ca: ca, succeeds: true}, {name: "explicit skip", skip: true, succeeds: true},
+		{name: "untrusted"}, {name: "explicit skip", skip: true, succeeds: true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			opts := testOptions(server.URL)
-			opts.CABundlePEM = tc.ca
 			opts.InsecureSkipVerify = tc.skip
 			api, ctx, err := NewOpenAPIClientWithOptions(context.Background(), opts)
 			require.NoError(t, err)
@@ -156,14 +161,18 @@ func TestTLSOptions(t *testing.T) {
 			}
 		})
 	}
-	opts := testOptions(server.URL)
-	opts.CABundlePEM = ca
-	transport, err := newTransport(opts)
+}
+
+func TestTLSOptionsSystemTrustHelper(t *testing.T) {
+	endpoint := os.Getenv("RECEIVER_TEST_URL")
+	if endpoint == "" {
+		t.Skip("helper process only")
+	}
+	api, ctx, err := NewOpenAPIClientWithOptions(context.Background(), testOptions(endpoint))
 	require.NoError(t, err)
-	roots := transport.(*http.Transport).TLSClientConfig.RootCAs
-	system, err := x509.SystemCertPool()
+	_, response, err := api.FeaturesAPI.GetFeatures(ctx).Execute()
 	require.NoError(t, err)
-	assert.GreaterOrEqual(t, len(roots.Subjects()), len(system.Subjects()))
+	response.Body.Close()
 }
 
 func TestProxyAndRedirectBoundaries(t *testing.T) {
