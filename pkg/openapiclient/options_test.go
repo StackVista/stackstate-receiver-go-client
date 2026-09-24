@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -132,12 +133,14 @@ func TestTLSOptions(t *testing.T) {
 	}))
 	defer server.Close()
 	ca := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: server.Certificate().Raw})
-	caFile := filepath.Join(t.TempDir(), "receiver-ca.pem")
-	require.NoError(t, os.WriteFile(caFile, ca, 0600))
-	command := exec.Command(os.Args[0], "-test.run=^TestTLSOptionsSystemTrustHelper$")
-	command.Env = append(os.Environ(), "SSL_CERT_FILE="+caFile, "RECEIVER_TEST_URL="+server.URL)
-	output, err := command.CombinedOutput()
-	require.NoErrorf(t, err, "system trust helper failed: %s", output)
+	if runtime.GOOS == "linux" {
+		caFile := filepath.Join(t.TempDir(), "receiver-ca.pem")
+		require.NoError(t, os.WriteFile(caFile, ca, 0600))
+		command := exec.Command(os.Args[0], "-test.run=^TestTLSOptionsSystemTrustHelper$")
+		command.Env = append(os.Environ(), "SSL_CERT_FILE="+caFile, "RECEIVER_TEST_URL="+server.URL)
+		output, err := command.CombinedOutput()
+		require.NoErrorf(t, err, "system trust helper failed: %s", output)
+	}
 	for _, tc := range []struct {
 		name     string
 		skip     bool
@@ -164,6 +167,9 @@ func TestTLSOptions(t *testing.T) {
 }
 
 func TestTLSOptionsSystemTrustHelper(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("SSL_CERT_FILE system trust test is supported on Linux only")
+	}
 	endpoint := os.Getenv("RECEIVER_TEST_URL")
 	if endpoint == "" {
 		t.Skip("helper process only")
