@@ -24,6 +24,9 @@ func newTransport(opts ConnectionOptions) (http.RoundTripper, error) {
 	return boundedTransport{transport}, nil
 }
 
+// boundedTransport caps the generated features client's unbounded ioutil.ReadAll,
+// which buffers even error bodies before checking status or decoding. Oversized
+// server/proxy responses could otherwise exhaust memory despite small feature payloads.
 type boundedTransport struct{ base http.RoundTripper }
 
 func (t boundedTransport) CloseIdleConnections() {
@@ -45,6 +48,8 @@ type boundedBody struct {
 	remaining int
 }
 
+// Read probes one byte past the limit to distinguish an exact fit from overflow.
+// io.LimitReader would return EOF at the limit, hiding truncation from the decoder.
 func (b *boundedBody) Read(p []byte) (int, error) {
 	if len(p) == 0 {
 		return 0, nil
