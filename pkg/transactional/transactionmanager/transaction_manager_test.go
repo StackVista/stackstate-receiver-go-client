@@ -324,24 +324,21 @@ func assertTransactionEvt(t *testing.T, txManager *transactionManager, txID stri
 
 	assert.Eventually(t, func() bool {
 		txManager.mux.RLock()
+		defer txManager.mux.RUnlock()
 		transaction, found := txManager.transactions[txID]
 		if found != true {
-			t.Errorf("Transaction %s not found in the transaction map", txID)
 			return false
 		}
 
 		if txID != transaction.TransactionID {
-			t.Errorf("Expected Transaction ID %s != Transaction ID %s", txID, transaction.TransactionID)
 			return false
 		}
 
 		if state != transaction.Status {
-			t.Errorf("Expected Status %s != Status %s", state, transaction.Status)
 			return false
 		}
 
 		if len(actions) != len(transaction.Actions) {
-			t.Errorf("Expected Actions len %d != actions len %d", len(actions), len(transaction.Actions))
 			return false
 		}
 
@@ -349,21 +346,17 @@ func assertTransactionEvt(t *testing.T, txManager *transactionManager, txID stri
 			expectedAction, found := actions[action.ActionID]
 
 			if found != true {
-				t.Errorf("Action %s not found in the action map", action.ActionID)
 				return false
 			}
 
 			if expectedAction.ActionID != action.ActionID {
-				t.Errorf("Expected Action %s != Action %s", expectedAction.ActionID, action.ActionID)
 				return false
 			}
 
 			if expectedAction.Status != action.Status {
-				t.Errorf("Expected Action Status %s != Action Status %s", expectedAction.Status, action.Status)
 				return false
 			}
 		}
-		txManager.mux.RUnlock()
 
 		return true
 	}, 100*time.Millisecond, 10*time.Millisecond)
