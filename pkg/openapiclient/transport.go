@@ -1,10 +1,25 @@
 package openapiclient
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"net/http"
+	"net/url"
+	"strings"
 )
+
+const maxFeatureResponseBytes = 1 << 20
+
+// ProxyConnectError retains a CONNECT rejection without proxy credentials or response text.
+type ProxyConnectError struct {
+	StatusCode int
+}
+
+func (e *ProxyConnectError) Error() string {
+	return fmt.Sprintf("proxy CONNECT rejected with HTTP status %d", e.StatusCode)
+}
 
 func newTransport(opts ConnectionOptions) (http.RoundTripper, error) {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
@@ -16,6 +31,55 @@ func newTransport(opts ConnectionOptions) (http.RoundTripper, error) {
 			return nil, fmt.Errorf("invalid proxy URL: %w", err)
 		}
 		transport.Proxy = http.ProxyURL(proxy)
+		transport.OnProxyConnectResponse = func(_ context.Context, _ *url.URL, _ *http.Request, response *http.Response) error {
+			if response.StatusCode != http.StatusOK {
+				return &ProxyConnectError{StatusCode: response.StatusCode}
+			}
+			return nil
+		}
 	}
-	return transport, nil
+	return boundedTransport{transport}, nil
+}
+
+// boundedTransport caps the generated features client's unbounded ioutil.ReadAll,
+// which buffers even error bodies before checking status or decoding. Oversized
+// server/proxy responses could otherwise exhaust memory despite small feature payloads.
+type boundedTransport struct{ base http.RoundTripper }
+
+func (t boundedTransport) CloseIdleConnections() {
+	if transport, ok := t.base.(interface{ CloseIdleConnections() }); ok {
+		transport.CloseIdleConnections()
+	}
+}
+
+func (t boundedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	response, err := t.base.RoundTrip(req)
+	if response != nil && response.Body != nil && strings.HasSuffix(req.URL.Path, "/stsAgent/features") {
+		response.Body = &boundedBody{ReadCloser: response.Body, remaining: maxFeatureResponseBytes}
+	}
+	return response, err
+}
+
+type boundedBody struct {
+	io.ReadCloser
+	remaining int
+}
+
+// Read probes one byte past the limit to distinguish an exact fit from overflow.
+// io.LimitReader would return EOF at the limit, hiding truncation from the decoder.
+func (b *boundedBody) Read(p []byte) (int, error) {
+	if len(p) == 0 {
+		return 0, nil
+	}
+	if len(p) > b.remaining+1 {
+		p = p[:b.remaining+1]
+	}
+	n, err := b.ReadCloser.Read(p)
+	if n > b.remaining {
+		n = b.remaining
+		b.remaining = 0
+		return n, ErrResponseTooLarge
+	}
+	b.remaining -= n
+	return n, err
 }

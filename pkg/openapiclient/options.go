@@ -22,6 +22,9 @@ type ConnectionOptions struct {
 // ErrMissingCredential indicates that no usable authentication credential is available.
 var ErrMissingCredential = errors.New("receiver credential is empty")
 
+// ErrResponseTooLarge indicates that a feature response exceeded the supported limit.
+var ErrResponseTooLarge = errors.New("receiver feature response exceeds 1 MiB")
+
 func parseEndpoint(raw string, allowUserinfo bool) (*url.URL, error) {
 	u, err := url.Parse(raw)
 	if err != nil || u == nil || (u.Scheme != "http" && u.Scheme != "https") || u.Hostname() == "" || u.Opaque != "" {
