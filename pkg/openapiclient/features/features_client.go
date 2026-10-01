@@ -61,6 +61,10 @@ func (c *Client) FetchFeatures(authCtx context.Context) Result {
 		values, response, err := c.api.GetFeaturesExecute(c.api.GetFeatures(attemptCtx))
 		result.Attempts++
 		result.StatusCode = 0
+		var proxyError *openapiclient.ProxyConnectError
+		if errors.As(err, &proxyError) {
+			result.StatusCode = proxyError.StatusCode
+		}
 		retryAfter := time.Duration(0)
 		if response != nil {
 			result.StatusCode = response.StatusCode
@@ -124,10 +128,23 @@ func (c *Client) classify(parent, attempt context.Context, values map[string]any
 	if parent.Err() != nil {
 		return Canceled
 	}
+	var proxyError *openapiclient.ProxyConnectError
+	if errors.As(err, &proxyError) {
+		switch status := proxyError.StatusCode; {
+		case status == http.StatusProxyAuthRequired:
+			return Configuration
+		case status == 408 || status == 429 || status >= 500 && status <= 599:
+			return Transient
+		default:
+			return Rejected
+		}
+	}
 	if response != nil {
 		switch status := response.StatusCode; {
 		case status == 401 || status == 403:
 			return Authentication
+		case status == http.StatusProxyAuthRequired:
+			return Configuration
 		case status == 404:
 			return Unsupported
 		case status == 408 || status == 429 || status >= 500 && status <= 599:

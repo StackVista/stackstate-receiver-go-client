@@ -122,11 +122,13 @@ func TestFetchFeaturesHTTPStatusAndShape(t *testing.T) {
 		{"html_success", 200, "text/html", "<html>" + queryTestBody + "</html>", features.Malformed, nil},
 		{"sensitive_decode_error", 200, "application/json", `{"` + queryTestAPIKey + `":` + queryTestBody, features.Malformed, nil},
 	}
-	for _, status := range []int{401, 403, 404, 408, 429, 500, 502, 503, 504, 599, 400, 405, 409, 413, 418, 301, 302, 303, 304, 307, 308, 201, 202, 204, 206} {
+	for _, status := range []int{401, 403, 404, 407, 408, 429, 500, 502, 503, 504, 599, 400, 405, 409, 413, 418, 301, 302, 303, 304, 307, 308, 201, 202, 204, 206} {
 		class := features.Rejected
 		switch {
 		case status == 401 || status == 403:
 			class = features.Authentication
+		case status == 407:
+			class = features.Configuration
 		case status == 404:
 			class = features.Unsupported
 		case status == 408 || status == 429 || status >= 500:
@@ -169,6 +171,60 @@ func TestFetchFeaturesHTTPStatusAndShape(t *testing.T) {
 			}
 			if !reflect.DeepEqual(result.Features, tt.want) {
 				t.Error("decoded feature map differs from expected values")
+			}
+		})
+	}
+}
+
+func TestFetchFeaturesProxyConnectRejection(t *testing.T) {
+	for _, tc := range []struct {
+		status   int
+		class    features.Class
+		attempts int
+	}{
+		{407, features.Configuration, 1},
+		{403, features.Rejected, 1},
+		{404, features.Rejected, 1},
+		{302, features.Rejected, 1},
+		{408, features.Transient, 3},
+		{429, features.Transient, 3},
+		{500, features.Transient, 3},
+		{503, features.Transient, 3},
+	} {
+		t.Run(fmt.Sprint(tc.status), func(t *testing.T) {
+			var calls atomic.Int32
+			proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				calls.Add(1)
+				if r.Method != http.MethodConnect {
+					t.Error("expected HTTPS CONNECT")
+				}
+				if r.Header.Get("Authorization") != "" {
+					t.Error("Receiver authorization leaked to CONNECT proxy")
+				}
+				w.WriteHeader(tc.status)
+				_, _ = io.WriteString(w, queryTestBody)
+			}))
+			defer proxy.Close()
+			proxyURL, err := url.Parse(proxy.URL)
+			if err != nil {
+				t.Fatal(err)
+			}
+			proxyURL.User = url.UserPassword("synthetic-user", queryTestError)
+			api, ctx, err := openapiclient.NewOpenAPIClientWithOptions(context.Background(), openapiclient.ConnectionOptions{
+				ReceiverURL:    "https://receiver.invalid",
+				APIKey:         queryTestAPIKey,
+				ProxyURL:       proxyURL.String(),
+				RequestTimeout: time.Second,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer api.GetConfig().HTTPClient.CloseIdleConnections()
+			client := newQueryTestClient(t, api.FeaturesAPI, queryTestOptions())
+			started := time.Now()
+			checkQueryResult(t, client.FetchFeatures(ctx), tc.class, tc.status, tc.attempts, started)
+			if got := int(calls.Load()); got != tc.attempts {
+				t.Errorf("CONNECT attempts = %d; want %d", got, tc.attempts)
 			}
 		})
 	}

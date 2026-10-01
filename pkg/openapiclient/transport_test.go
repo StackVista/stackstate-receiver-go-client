@@ -2,6 +2,7 @@ package openapiclient
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -13,6 +14,29 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestProxyConnectErrorDoesNotRetainResponseText(t *testing.T) {
+	const privateText = "synthetic-private-proxy-response"
+	proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		conn, _, err := w.(http.Hijacker).Hijack()
+		require.NoError(t, err)
+		defer conn.Close()
+		_, err = fmt.Fprintf(conn, "HTTP/1.1 407 %s\r\nContent-Length: %d\r\n\r\n%s", privateText, len(privateText), privateText)
+		require.NoError(t, err)
+	}))
+	defer proxy.Close()
+	opts := testOptions("https://receiver.invalid")
+	opts.ProxyURL = proxy.URL
+	api, ctx, err := NewOpenAPIClientWithOptions(context.Background(), opts)
+	require.NoError(t, err)
+	defer api.GetConfig().HTTPClient.CloseIdleConnections()
+	_, _, err = api.FeaturesAPI.GetFeatures(ctx).Execute()
+	var rejection *ProxyConnectError
+	require.ErrorAs(t, err, &rejection)
+	assert.Equal(t, http.StatusProxyAuthRequired, rejection.StatusCode)
+	assert.NotContains(t, err.Error(), privateText)
+	assert.Equal(t, "proxy CONNECT rejected with HTTP status 407", rejection.Error())
+}
 
 func TestClientClosesIdleFeatureConnections(t *testing.T) {
 	closed := make(chan struct{}, 1)

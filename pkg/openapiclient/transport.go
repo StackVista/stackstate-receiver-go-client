@@ -1,14 +1,25 @@
 package openapiclient
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
 const maxFeatureResponseBytes = 1 << 20
+
+// ProxyConnectError retains a CONNECT rejection without proxy credentials or response text.
+type ProxyConnectError struct {
+	StatusCode int
+}
+
+func (e *ProxyConnectError) Error() string {
+	return fmt.Sprintf("proxy CONNECT rejected with HTTP status %d", e.StatusCode)
+}
 
 func newTransport(opts ConnectionOptions) (http.RoundTripper, error) {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
@@ -20,6 +31,12 @@ func newTransport(opts ConnectionOptions) (http.RoundTripper, error) {
 			return nil, fmt.Errorf("invalid proxy URL: %w", err)
 		}
 		transport.Proxy = http.ProxyURL(proxy)
+		transport.OnProxyConnectResponse = func(_ context.Context, _ *url.URL, _ *http.Request, response *http.Response) error {
+			if response.StatusCode != http.StatusOK {
+				return &ProxyConnectError{StatusCode: response.StatusCode}
+			}
+			return nil
+		}
 	}
 	return boundedTransport{transport}, nil
 }
