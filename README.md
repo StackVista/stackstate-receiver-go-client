@@ -1,4 +1,12 @@
-This library serves as an internal library as a client for the StackState platform receiver.
+> [!IMPORTANT]
+> **Internal component — not a supported API.** Code, protocols and
+> configuration in this repository can change in any release without notice.
+> Only interfaces documented in the
+> [SUSE Observability documentation](https://documentation.suse.com/cloudnative/suse-observability/latest/en/classic.html)
+> are supported. Do not build integrations against anything else here.
+> To send data to SUSE Observability, use [OpenTelemetry](https://documentation.suse.com/cloudnative/suse-observability/latest/en/setup/otel/overview.html) with [OTel component and relation mappings](https://documentation.suse.com/cloudnative/suse-observability/latest/en/setup/custom-integrations/otelmappings/getting-started.html).
+
+This library serves as a client for the StackState platform receiver.
 
 Part of the receiver API is compatible with DataDog, those parts are extracted here, another part is new and comes from stackstate-openapi.
 
